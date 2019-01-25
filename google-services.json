@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "949519506589",
+    "firebase_url": "https://mgoos-mvp.firebaseio.com",
+    "project_id": "mgoos-mvp",
+    "storage_bucket": "mgoos-mvp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949519506589:android:7f50b5ce8d8cc713",
+        "android_client_info": {
+          "package_name": "com.mgoos.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949519506589-kdnau097d9io12qncqt9ov85k9vrh97t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeMCPN5y8ZbBh9yNOag1TrFdHwcJl4Lco"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

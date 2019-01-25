@@ -3,58 +3,63 @@ import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
-import HomeScreen from '../screens/HomeScreen';
-import LinksScreen from '../screens/LinksScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import FeedScreen from '../screens/FeedScreen';
+import MyMusicScreen from '../screens/MyMusicScreen';
+import PlaylistScreen from '../screens/PLaylistScreen';
 
-const HomeStack = createStackNavigator({
-  Home: HomeScreen,
+import * as firebase from 'firebase';
+import { environment } from '../environments/environment';
+
+firebase.initializeApp(environment.firebase);
+
+const FeedStack = createStackNavigator({
+  Feed: FeedScreen,
 });
 
-HomeStack.navigationOptions = {
-  tabBarLabel: 'Home',
+FeedStack.navigationOptions = {
+  tabBarLabel: 'Feed',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
       name={
         Platform.OS === 'ios'
-          ? `ios-information-circle${focused ? '' : '-outline'}`
-          : 'md-information-circle'
+          ? 'ios-globe'
+          : 'logo-rss'
       }
     />
   ),
 };
 
-const LinksStack = createStackNavigator({
-  Links: LinksScreen,
+const MyMusicStack = createStackNavigator({
+  MyMusic: MyMusicScreen,
 });
 
-LinksStack.navigationOptions = {
-  tabBarLabel: 'Links',
+MyMusicStack.navigationOptions = {
+  tabBarLabel: 'My Music',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'}
+      name={Platform.OS === 'ios' ? 'ios-musical-notes' : 'md-musical-notes'}
     />
   ),
 };
 
-const SettingsStack = createStackNavigator({
-  Settings: SettingsScreen,
+const PlaylistStack = createStackNavigator({
+  Playlist: PlaylistScreen,
 });
 
-SettingsStack.navigationOptions = {
-  tabBarLabel: 'Settings',
+PlaylistStack.navigationOptions = {
+  tabBarLabel: 'Playlist',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? 'ios-options' : 'md-options'}
+      name={Platform.OS === 'ios' ? 'ios-list' : 'md-list'}
     />
   ),
 };
 
 export default createBottomTabNavigator({
-  HomeStack,
-  LinksStack,
-  SettingsStack,
+  FeedStack,
+  MyMusicStack,
+  PlaylistStack,
 });
