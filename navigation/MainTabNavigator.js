@@ -7,11 +7,6 @@ import FeedScreen from '../screens/FeedScreen';
 import MyMusicScreen from '../screens/MyMusicScreen';
 import PlaylistScreen from '../screens/PLaylistScreen';
 
-import * as firebase from 'firebase';
-import { environment } from '../environments/environment';
-
-firebase.initializeApp(environment.firebase);
-
 const FeedStack = createStackNavigator({
   Feed: FeedScreen,
 });

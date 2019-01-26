@@ -7,7 +7,7 @@ export default class DataService {
   static mp3UploadObservable;
   static mp3UploadObserver;
 
-  constructor() {
+  /*constructor() {
     let _me_ = this;
 
     this.mp3UploadObservable = Observable.create(observer => {
@@ -20,7 +20,7 @@ export default class DataService {
 
   ngOnInit() {
     
-  }
+  }*/
 
   static uploadEvent() {
     return this.mp3UploadObservable;
@@ -41,7 +41,7 @@ export default class DataService {
   static setMP3UploadProgress(progress) {
     this.mp3UploadProgress = progress;
 
-    this.mp3UploadObserver.next(progress);
+    //this.mp3UploadObserver.next(progress);
     //alert("In setMP3UploadProgress : "+ progress);
   }
 

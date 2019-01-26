@@ -1,7 +1,9 @@
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
+import { Container } from 'native-base';
+
 import { ExpoLinksView } from '@expo/samples';
-import { Container, Header, View, Button, Icon, Fab } from 'native-base';
+import { Upload } from '../components/Upload';
 
 export default class MyMusicScreen extends React.Component {
   static navigationOptions = {
@@ -25,19 +27,9 @@ export default class MyMusicScreen extends React.Component {
           
           <ExpoLinksView />
         </ScrollView>
-        <Fab
-            containerStyle={{ }}
-            style={{ backgroundColor: '#5067FF' }}
-            position="bottomRight"
-            onPress={() => {this.onUpload()}}>
-            <Icon name="cloud-upload" />
-          </Fab>
+        <Upload/>
       </Container>
     );
-  }
-
-  onUpload() {
-    alert("Test");
   }
 }
 

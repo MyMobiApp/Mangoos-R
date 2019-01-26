@@ -1,9 +1,18 @@
-import * as firebase from 'firebase';
 import FirebaseStorage from './FirebaseStorage';
+
+const firebase = require('firebase');
+// Required for side-effects
+require('firebase/firestore');
+
+import { environment } from '../environments/environment';
 
 
 export default class FirebaseDBService {
     
+    static init() {
+        firebase.initializeApp(environment.firebase);
+    }
+
     static registerUser(profileData) {
         //firebase.firestore().collection('userProfile', ref => ref.where('email', "==", profileData.email)).snapshotChanges().subscribe(res => {
         firebase.firestore().collection('userProfile').where('email', "==", profileData.email).get().then(res => {

@@ -1,4 +1,6 @@
-import * as firebase from 'firebase';
+const firebase = require('firebase');
+// Required for side-effects
+require('firebase/firestore');
 
 export default class FirebaseStorage {
 
@@ -8,5 +10,9 @@ export default class FirebaseStorage {
     
     static deleteFile(file_path){
         return firebase.storage().ref(file_path).delete();
+    }
+
+    static uploadAudio(full_path, blob) {
+        return firebase.storage().ref(full_path).put(blob);
     }
 }

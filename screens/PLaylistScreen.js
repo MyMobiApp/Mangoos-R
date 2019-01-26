@@ -1,4 +1,6 @@
 import React from 'react';
+import TrackPlayer  from 'react-native-track-player';
+
 import { ExpoConfigView } from '@expo/samples';
 
 export default class PlaylistScreen extends React.Component {
