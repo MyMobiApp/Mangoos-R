@@ -1,11 +1,12 @@
 import React from 'react';
 import { Image, StyleSheet, Button, View, Text, Platform } from 'react-native';
 import { Container, Header, Icon, Fab, Spinner } from 'native-base';
-import { AuthSession } from 'expo';
+import { AuthSession, Facebook } from 'expo';
 import AppNavigator from './AppNavigator';
 
 import DataService from '../singleton/Data';
 import FirebaseDBService from '../singleton/FirestoreDB';
+import NativeStorage from '../singleton/NativeStorage';
 
 const firebase = require('firebase');
 // Required for side-effects
@@ -72,6 +73,9 @@ export default class LoginScreen extends React.Component {
         this.setState({ loggedIn: true, authenticating: false, userInfo: userData });
         // User is signed in.
       }
+      else {
+        this.setState({ loggedIn: false, authenticating: false, userInfo: null });
+      }
     });
 
     return (
@@ -96,7 +100,7 @@ export default class LoginScreen extends React.Component {
 
   _handlePressAsync = async () => {
     let redirectUrl = AuthSession.getRedirectUrl();
-    
+    //alert(redirectUrl);
     // You need to add this url to your authorized redirect urls on your Facebook app
     console.log({
       redirectUrl
@@ -110,19 +114,27 @@ export default class LoginScreen extends React.Component {
     // just prototyping then you don't need to concern yourself with this and
     // can copy this example, but be aware that this is not safe in production.
 
-    let result = await AuthSession.startAsync({
+    /*let result = await AuthSession.startAsync({
       authUrl:
         `https://www.facebook.com/v2.8/dialog/oauth?response_type=token` +
         `&client_id=${FB_APP_ID}` +
         `&redirect_uri=${encodeURIComponent(redirectUrl)}`,
-    });
+    });*/
+
+    let result = await Facebook.logInWithReadPermissionsAsync(FB_APP_ID,
+       {permissions: ['public_profile'],
+        behavior: 'native'});
 
     if (result.type !== 'success') {
       alert('Uh oh, something went wrong');
       return;
     }
 
-    let accessToken = result.params.access_token;
+    //let accessToken = result.params.access_token;
+    let accessToken = result.token;
+    console.log(accessToken);
+    await NativeStorage.persistAccessToken(accessToken);
+
     let userInfoResponse = await fetch(
       `https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email,first_name,last_name,picture.type(large)`
     );

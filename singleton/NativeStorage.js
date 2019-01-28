@@ -24,4 +24,12 @@ export default class NativeStorage {
     static getFeedItem() {
         return AsyncStorage.getItem('feed');
     }
+
+    static persistAccessToken(token) {
+        return AsyncStorage.setItem('fbAccessToken', token);
+    }
+
+    static getAccessToken() {
+        return AsyncStorage.getItem('fbAccessToken');
+    }
 }

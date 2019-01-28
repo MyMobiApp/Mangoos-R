@@ -7,10 +7,16 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Button
 } from 'react-native';
 import { WebBrowser } from 'expo';
 
 import { MonoText } from '../components/StyledText';
+
+const firebase = require('firebase');
+// Required for side-effects
+require('firebase/firestore');
+
 
 export default class FeedScreen extends React.Component {
   static navigationOptions = {
@@ -51,6 +57,11 @@ export default class FeedScreen extends React.Component {
               <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.helpContainer}>
+            <Button title="Sign Out" onPress={this._signOut}/>
+          </View>
+          
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
@@ -62,6 +73,10 @@ export default class FeedScreen extends React.Component {
         </View>
       </View>
     );
+  }
+
+  _signOut() {
+    firebase.auth().signOut();
   }
 
   _maybeRenderDevelopmentModeWarning() {
