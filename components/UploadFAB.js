@@ -11,7 +11,7 @@ const firebase = require('firebase');
 // Required for side-effects
 require('firebase/firestore');
 
-export class Upload extends React.Component {
+export class UploadFAB extends React.Component {
  
   constructor(props) {
     super(props);
@@ -94,17 +94,23 @@ export class Upload extends React.Component {
         // Enable background mode.
         //_me_.backgroundMode.enable();
         
-        // Trigger indicating upload initiated
-        DataService.setMP3UploadProgress(0);
+        // Trigger props callback, indicating upload initiated
+        //DataService.setMP3UploadProgress(0);
+        this.props.onInit();
         
         // Start upload, and track upload progress
         let task = FirebaseStorage.uploadAudio(fullPath, blob);
 
         this.subscribeUploadProgress(task).then(downloadURL => {
             this.state.downloadURL = downloadURL;
+            // Trigger props callback, indicating upload completed
+            this.props.onDone(downloadURL);
         }).catch(error => {
             console.log(error);
             FirebaseDBService.deleteDocWithRef(docRef);
+
+            // Trigger props callback, indicating upload error
+            this.props.onError(error);
         });
 
         // We're done with the blob, close and release it
@@ -147,10 +153,11 @@ export class Upload extends React.Component {
             // Observe state change events such as progress, pause, and resume
             // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
             this.state.progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            // Trigger props callback, indicating upload progress
+            this.props.onProgress(this.state.progress);
+            
             console.log("Upload Progress % : " + this.state.progress);
-            if(this.state.progress) {
-
-            }
+            
             switch (snapshot.state) {
                 case firebase.storage.TaskState.PAUSED: // or 'paused'
                     console.log('Upload is paused');

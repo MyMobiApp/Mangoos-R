@@ -10,8 +10,10 @@ import {
   Button
 } from 'react-native';
 import { WebBrowser } from 'expo';
+import { Container } from 'native-base';
 
 import { MonoText } from '../components/StyledText';
+import { AppHeader } from '../components/AppHeader';
 
 const firebase = require('firebase');
 // Required for side-effects
@@ -20,12 +22,13 @@ require('firebase/firestore');
 
 export default class FeedScreen extends React.Component {
   static navigationOptions = {
-    header: null,
+    header: null
   };
 
   render() {
     return (
       <View style={styles.container}>
+        <AppHeader title='MGooS'/>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           <View style={styles.welcomeContainer}>
             <Image

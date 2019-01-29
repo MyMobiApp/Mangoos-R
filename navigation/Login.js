@@ -13,6 +13,7 @@ const firebase = require('firebase');
 require('firebase/firestore');
 
 const FB_APP_ID = '2436819223026748';
+const GOOGLE_OAUTH_CLIENT_ID = '949519506589-kdnau097d9io12qncqt9ov85k9vrh97t.apps.googleusercontent.com';
 
 export default class LoginScreen extends React.Component {
   static navigationOptions = {

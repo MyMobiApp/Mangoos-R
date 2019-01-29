@@ -7,11 +7,13 @@ import {
 	TouchableHighlight,
 	View,
 } from 'react-native';
+import { Container } from 'native-base';
 import Slider from 'react-native-slider';
 import { Asset, Audio, Font, KeepAwake  } from 'expo';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { ExpoConfigView } from '@expo/samples';
+import { AppHeader } from '../components/AppHeader';
 
 class PlaylistItem {
 	constructor(title, album, uri, coverImage) {
@@ -52,7 +54,7 @@ const RATE_SCALE = 3.0;
 
 export default class PlaylistScreen extends React.Component {
   static navigationOptions = {
-    title: 'Playlist',
+    header: null,
   };
 
   constructor(props) {
@@ -79,12 +81,6 @@ export default class PlaylistScreen extends React.Component {
 			rate: 1.0,
 			portrait: null,
 		};
-  }
-
-  old_render() {
-    /* Go ahead and delete ExpoConfigView and replace it with your
-     * content, we just wanted to give you a quick view of your config */
-    return <ExpoConfigView />;
   }
 
   componentDidMount() {
@@ -301,184 +297,189 @@ export default class PlaylistScreen extends React.Component {
 
 	render() {
 		return !this.state.fontLoaded ? (
-			<View />
+			<Container>
+				<View />
+			</Container>
 		) : (
-			<View style={styles.container}>
-				<View style={styles.portraitContainer}>
-					<Image
-						style={styles.portrait}
-						source={{
-							uri: this.state.portrait,
-						}}
-					/>
-				</View>
-				<View style={styles.detailsContainer}>
-					<Text style={[styles.text, { fontFamily: 'roboto' }]}>
-						{this.state.playbackInstanceName}
-					</Text>
-					<Text style={[styles.text, { fontFamily: 'roboto' }]}>
-						{this.state.isBuffering ? (
-							BUFFERING_STRING
-						) : (
-							this._getTimestamp()
-						)}
-					</Text>
-				</View>
-				<View
-					style={[
-						styles.buttonsContainerBase,
-						styles.buttonsContainerTopRow,
-						{
-							opacity: this.state.isLoading
-								? DISABLED_OPACITY
-								: 1.0,
-						},
-					]}
-				>
-					<TouchableHighlight
-						underlayColor={BACKGROUND_COLOR}
-						style={styles.wrapper}
-						onPress={this._onBackPressed}
-						disabled={this.state.isLoading}
-					>
-						<View>
-							<MaterialIcons
-								name="fast-rewind"
-								size={40}
-								color="#56D5FA"
-							/>
-						</View>
-					</TouchableHighlight>
-					<TouchableHighlight
-						underlayColor={BACKGROUND_COLOR}
-						style={styles.wrapper}
-						onPress={this._onPlayPausePressed}
-						disabled={this.state.isLoading}
-					>
-						<View>
-							{this.state.isPlaying ? (
-								<MaterialIcons
-									name="pause"
-									size={40}
-									color="#56D5FA"
-								/>
+			<Container>
+				<AppHeader title='MGooS' />
+				<View style={styles.container}>
+					<View style={styles.portraitContainer}>
+						<Image
+							style={styles.portrait}
+							source={{
+								uri: this.state.portrait,
+							}}
+						/>
+					</View>
+					<View style={styles.detailsContainer}>
+						<Text style={[styles.text, { fontFamily: 'roboto' }]}>
+							{this.state.playbackInstanceName}
+						</Text>
+						<Text style={[styles.text, { fontFamily: 'roboto' }]}>
+							{this.state.isBuffering ? (
+								BUFFERING_STRING
 							) : (
+								this._getTimestamp()
+							)}
+						</Text>
+					</View>
+					<View
+						style={[
+							styles.buttonsContainerBase,
+							styles.buttonsContainerTopRow,
+							{
+								opacity: this.state.isLoading
+									? DISABLED_OPACITY
+									: 1.0,
+							},
+						]}
+					>
+						<TouchableHighlight
+							underlayColor={BACKGROUND_COLOR}
+							style={styles.wrapper}
+							onPress={this._onBackPressed}
+							disabled={this.state.isLoading}
+						>
+							<View>
 								<MaterialIcons
-									name="play-arrow"
+									name="fast-rewind"
 									size={40}
 									color="#56D5FA"
 								/>
-							)}
+							</View>
+						</TouchableHighlight>
+						<TouchableHighlight
+							underlayColor={BACKGROUND_COLOR}
+							style={styles.wrapper}
+							onPress={this._onPlayPausePressed}
+							disabled={this.state.isLoading}
+						>
+							<View>
+								{this.state.isPlaying ? (
+									<MaterialIcons
+										name="pause"
+										size={40}
+										color="#56D5FA"
+									/>
+								) : (
+									<MaterialIcons
+										name="play-arrow"
+										size={40}
+										color="#56D5FA"
+									/>
+								)}
+							</View>
+						</TouchableHighlight>
+						<TouchableHighlight
+							underlayColor={BACKGROUND_COLOR}
+							style={styles.wrapper}
+							onPress={this._onStopPressed}
+							disabled={this.state.isLoading}
+						>
+							<View>
+								<MaterialIcons
+									name="stop"
+									size={40}
+									color="#56D5FA"
+								/>
+							</View>
+						</TouchableHighlight>
+						<TouchableHighlight
+							underlayColor={BACKGROUND_COLOR}
+							style={styles.wrapper}
+							onPress={this._onForwardPressed}
+							disabled={this.state.isLoading}
+						>
+							<View>
+								<MaterialIcons
+									name="fast-forward"
+									size={40}
+									color="#56D5FA"
+								/>
+							</View>
+						</TouchableHighlight>
+					</View>
+					<View
+						style={[
+							styles.playbackContainer,
+							{
+								opacity: this.state.isLoading
+									? DISABLED_OPACITY
+									: 1.0,
+							},
+						]}
+					>
+						<Slider
+							style={styles.playbackSlider}
+							value={this._getSeekSliderPosition()}
+							onValueChange={this._onSeekSliderValueChange}
+							onSlidingComplete={this._onSeekSliderSlidingComplete}
+							thumbTintColor="#000000"
+							minimumTrackTintColor="#4CCFF9"
+							disabled={this.state.isLoading}
+						/>
+					</View>
+					<View
+						style={[
+							styles.buttonsContainerBase,
+							styles.buttonsContainerMiddleRow,
+						]}
+					>
+						<View style={styles.volumeContainer}>
+							<View>
+								<MaterialIcons
+									name="volume-down"
+									size={40}
+									color="#56D5FA"
+								/>
+							</View>
+							<Slider
+								style={styles.volumeSlider}
+								value={1}
+								onValueChange={this._onVolumeSliderValueChange}
+								thumbTintColor="#000000"
+								minimumTrackTintColor="#4CCFF9"
+							/>
+							<View>
+								<MaterialIcons
+									name="volume-up"
+									size={40}
+									color="#56D5FA"
+								/>
+							</View>
 						</View>
-					</TouchableHighlight>
-					<TouchableHighlight
-						underlayColor={BACKGROUND_COLOR}
-						style={styles.wrapper}
-						onPress={this._onStopPressed}
-						disabled={this.state.isLoading}
+					</View>
+					<View
+						style={[
+							styles.buttonsContainerBase,
+							styles.buttonsContainerBottomRow,
+						]}
 					>
 						<View>
 							<MaterialIcons
-								name="stop"
-								size={40}
-								color="#56D5FA"
-							/>
-						</View>
-					</TouchableHighlight>
-					<TouchableHighlight
-						underlayColor={BACKGROUND_COLOR}
-						style={styles.wrapper}
-						onPress={this._onForwardPressed}
-						disabled={this.state.isLoading}
-					>
-						<View>
-							<MaterialIcons
-								name="fast-forward"
-								size={40}
-								color="#56D5FA"
-							/>
-						</View>
-					</TouchableHighlight>
-				</View>
-				<View
-					style={[
-						styles.playbackContainer,
-						{
-							opacity: this.state.isLoading
-								? DISABLED_OPACITY
-								: 1.0,
-						},
-					]}
-				>
-					<Slider
-						style={styles.playbackSlider}
-						value={this._getSeekSliderPosition()}
-						onValueChange={this._onSeekSliderValueChange}
-						onSlidingComplete={this._onSeekSliderSlidingComplete}
-						thumbTintColor="#000000"
-						minimumTrackTintColor="#4CCFF9"
-						disabled={this.state.isLoading}
-					/>
-				</View>
-				<View
-					style={[
-						styles.buttonsContainerBase,
-						styles.buttonsContainerMiddleRow,
-					]}
-				>
-					<View style={styles.volumeContainer}>
-						<View>
-							<MaterialIcons
-								name="volume-down"
+								name="call-received"
 								size={40}
 								color="#56D5FA"
 							/>
 						</View>
 						<Slider
-							style={styles.volumeSlider}
-							value={1}
-							onValueChange={this._onVolumeSliderValueChange}
+							style={styles.rateSlider}
+							value={this.state.rate / RATE_SCALE}
+							onSlidingComplete={this._onRateSliderSlidingComplete}
 							thumbTintColor="#000000"
 							minimumTrackTintColor="#4CCFF9"
 						/>
 						<View>
 							<MaterialIcons
-								name="volume-up"
+								name="call-made"
 								size={40}
 								color="#56D5FA"
 							/>
 						</View>
 					</View>
 				</View>
-				<View
-					style={[
-						styles.buttonsContainerBase,
-						styles.buttonsContainerBottomRow,
-					]}
-				>
-					<View>
-						<MaterialIcons
-							name="call-received"
-							size={40}
-							color="#56D5FA"
-						/>
-					</View>
-					<Slider
-						style={styles.rateSlider}
-						value={this.state.rate / RATE_SCALE}
-						onSlidingComplete={this._onRateSliderSlidingComplete}
-						thumbTintColor="#000000"
-						minimumTrackTintColor="#4CCFF9"
-					/>
-					<View>
-						<MaterialIcons
-							name="call-made"
-							size={40}
-							color="#56D5FA"
-						/>
-					</View>
-				</View>
-			</View>
+			</Container>
 		);
 	}
 }

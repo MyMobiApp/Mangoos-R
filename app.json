@@ -27,6 +27,13 @@
     },
     "android": {
       "package": "com.mgoos.app"
+    },
+    "androidStatusBarColor": "#334393",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#334393"
     }
-  }
+  },
+  "android.config.googleSignIn.apiKey": "AIzaSyBbLly5kGInMEuJCRj3sU_tL5Hgx6drvRU",
+  "android.config.googleSignIn.certificateHash": "4FA74BC1607AD9618902ED2A40FEAF6C8F13849E"
 }
