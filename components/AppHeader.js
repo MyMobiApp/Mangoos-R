@@ -33,7 +33,7 @@ export class AppHeader extends React.Component {
   }
 
   _onMenuPress = () => {
-
+    this.props.navigation.toggleDrawer();
   }
 
   _onSharePress = () => {
