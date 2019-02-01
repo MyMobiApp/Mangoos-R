@@ -1,5 +1,6 @@
 import FirebaseStorage from './FirebaseStorage';
 
+import atob from 'atob';
 const firebase = require('firebase');
 // Required for side-effects
 require('firebase/firestore');
@@ -19,13 +20,14 @@ export default class FirebaseDBService {
           if (!res.empty)
           {
             console.log("Match found.");
+            console.log(profileData);
             
             const first_name  = profileData.first_name;
             const last_name   = profileData.last_name;
             const full_name   = profileData.full_name;
             const picture_url = profileData.picture_url;
     
-            res.forEach(function(doc) {
+            res.forEach(doc => {
               doc.ref.update({first_name, last_name, full_name, picture_url}).then(() => {
                 console.log("Profile information is updated with name and image.");
               }).catch(error => {
@@ -189,22 +191,26 @@ export default class FirebaseDBService {
             }
             else {
                 mp3Collection = firebase.firestore().collection('mp3Collection')
-                .doc(handle).collection(album)
-                .orderBy('createdAt', 'desc')
-                .limit(limit);
+                .doc(handle).collection(album);
             }
 
-            mp3Collection.onSnapshot(querySnapshot => {
+            console.log("querying getMusicMetaInfoList.... - " + handle + " - " + album + " - " + offset + " - " + limit);
+            mp3Collection.get().then(querySnapshot => {
+              console.log("Got snapshot...");
                 let list = Array();
 
                 querySnapshot.forEach(docSnapshot => {
-                    list.push({id: docSnapshot.id, data: docSnapshot.data()});
+                  console.log(docSnapshot);
+                  list.push({id: docSnapshot.id, data: docSnapshot.data()});
                 });
 
                 resolve(list);
-            }, error => {
-                reject(error);
+            }).catch(error => {
+              console.log(error);
+              reject(error);
             });
+
+            console.log("Done querying getMusicMetaInfoList....");
         });
       }
     

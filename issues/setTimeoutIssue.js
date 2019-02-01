@@ -1,4 +1,5 @@
 import {Platform, InteractionManager} from 'react-native';
+import atob from 'atob';
 
 const _setTimeout = global.setTimeout;
 const _clearTimeout = global.clearTimeout;
@@ -43,4 +44,8 @@ if (Platform.OS === 'android') {
         }
         _clearTimeout(id);
     };
+
+    global.atob = b64 => {
+        atob(b64);
+    }
 }

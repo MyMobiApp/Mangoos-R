@@ -63,12 +63,6 @@ export default class DataService {
     console.log("Saved ProfileData: " + JSON.stringify(this.profileData));
   }
 
-  static addNewProfileData(pd) {
-    this.profileData = Object.assign({}, pd);
-
-    FirebaseDBService.registerUser(pd);
-  }
-
   static updateProfileData(pd) {
     this.profileData = Object.assign({}, pd);
   }
@@ -77,8 +71,8 @@ export default class DataService {
     return this.sanitizer.bypassSecurityTrustUrl('data:'+format+';base64,' + base64data);
   }
 
-  static rawImgSrc(format, base64data) {
-    return ('data:'+format+';base64,' + base64data);
+  static rawImgSrc(format, data) {
+    return ('data:'+format+';base64,' + data);
   }
 
   static sanitizeImg(imgData) {

@@ -10,13 +10,17 @@ import {
 import Slider from 'react-native-slider';
 import { Audio, Font, KeepAwake  } from 'expo';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Grid, Col } from 'native-base';
 
 export class PlaylistItem {
-	constructor(title, album, uri, coverImage) {
-        this.title  = title;
-        this.album  = album;
-		this.uri    = uri;
-		this.coverImage  = coverImage;
+	constructor(id, title, album, uri, coverImage, duration, createdAt) {
+        this.id             = id;
+        this.title          = title;
+        this.album          = album;
+		this.uri            = uri;
+        this.coverImage     = coverImage;
+        this.duration       = duration;
+        this.createdAt      = createdAt;
 	}
 }
 
@@ -276,28 +280,28 @@ _getTimestamp() {
         <View />
         ) : (	
         <View style={styles.container}>
-            {/* 
-            <View style={styles.portraitContainer}>
-                <Image
-                    style={styles.portrait}
-                    source={{
-                        uri: this.state.portrait,
-                    }}
-                />
-            </View>
-            */}
-            <View style={styles.detailsContainer}>
-                <Text style={[styles.text, { fontFamily: 'roboto' }]}>
-                    {this.state.playbackInstanceName}
-                </Text>
-                <Text style={[styles.text, { fontFamily: 'roboto' }]}>
-                    {this.state.isBuffering ? (
-                        BUFFERING_STRING
-                    ) : (
-                        this._getTimestamp()
-                    )}
-                </Text>
-            </View>
+            <Grid>
+                <Col style={styles.coverImgContainer}>
+                    <Image
+                         style={{width: 50, height: 50}}
+                         source={{uri: this.props.playlist[this.index].coverImage}}
+                    />
+                </Col>
+                <Col>
+                <View style={styles.detailsContainer}>
+                    <Text style={[styles.text, { fontFamily: 'roboto' }]}>
+                        {this.state.playbackInstanceName}
+                    </Text>
+                    <Text style={[styles.text, { fontFamily: 'roboto' }]}>
+                        {this.state.isBuffering ? (
+                            BUFFERING_STRING
+                        ) : (
+                            this._getTimestamp()
+                        )}
+                    </Text>
+                </View>
+                </Col>
+            </Grid>
             <View
                 style={[
                     styles.buttonsContainerBase,
@@ -396,66 +400,6 @@ _getTimestamp() {
                     thumbTouchSize={thumbTouchSize}
                 />
             </View>
-            {/*
-            <View
-                style={[
-                    styles.buttonsContainerBase,
-                    styles.buttonsContainerMiddleRow,
-                ]}
-            >
-                <View style={styles.volumeContainer}>
-                    <View>
-                        <MaterialIcons
-                            name="volume-down"
-                            size={40}
-                            color="#56D5FA"
-                        />
-                    </View>
-                    <Slider
-                        style={styles.volumeSlider}
-                        value={1}
-                        onValueChange={this._onVolumeSliderValueChange}
-                        thumbTintColor="#000000"
-                        minimumTrackTintColor="#4CCFF9"
-                    />
-                    <View>
-                        <MaterialIcons
-                            name="volume-up"
-                            size={40}
-                            color="#56D5FA"
-                        />
-                    </View>
-                </View>
-            </View>
-            <View
-                style={[
-                    styles.buttonsContainerBase,
-                    styles.buttonsContainerBottomRow,
-                ]}
-            >
-                <View>
-                    <MaterialIcons
-                        name="call-received"
-                        size={40}
-                        color="#56D5FA"
-                    />
-                </View>
-                <Slider
-                    style={styles.rateSlider}
-                    value={this.state.rate / RATE_SCALE}
-                    onSlidingComplete={this._onRateSliderSlidingComplete}
-                    thumbTintColor="#000000"
-                    minimumTrackTintColor="#4CCFF9"
-                />
-                <View>
-                    <MaterialIcons
-                        name="call-made"
-                        size={40}
-                        color="#56D5FA"
-                    />
-                </View>
-            </View>
-            */}
         </View>
     );
   }
@@ -483,7 +427,7 @@ const styles = StyleSheet.create({
         elevation: 5,
         marginLeft: 5,
         marginRight: 10,
-        marginBottom: 10,
+        marginBottom: 8,
 	},
 	portraitContainer: {
 		marginTop: 80,
@@ -494,7 +438,12 @@ const styles = StyleSheet.create({
 	},
 	detailsContainer: {
 		height: 40,
-		marginTop: 40,
+		marginTop: 25,
+		alignItems: 'flex-start',
+    },
+    coverImgContainer: {
+        width: 90,
+		marginTop: 20,
 		alignItems: 'center',
 	},
 	playbackContainer: {

@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, ProgressBarAndroid } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import { Textarea, View, Card, CardItem, Text, Body, Button, Icon, Badge, Left, Right } from 'native-base';
+import FirebaseDBService from '../singleton/FirestoreDB';
 
 export class UploadProgress extends React.Component {
 
@@ -12,6 +13,20 @@ export class UploadProgress extends React.Component {
         progress: this.props.progress,
         fileName: this.props.fileName
     }
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (this.state.progress !== newProps.progress) {
+      this.setState({progress: newProps.progress});
+    }
+
+    if (this.state.fileName !== newProps.fileName) {
+      this.setState({fileName: newProps.fileName});
+    }
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return this.state.progress !== nextProps.progress || this.state.fileName !== nextProps.fileName;
   }
 
   render() {
@@ -25,7 +40,7 @@ export class UploadProgress extends React.Component {
           <CardItem>
             <Body>
               <View style={styles.progressBar}>
-                <View style={styles.width90}>
+                <View style={styles.width85}>
                   <ProgressBarAndroid 
                     styleAttr="Horizontal"
                     indeterminate={false}
@@ -66,11 +81,11 @@ export class UploadProgress extends React.Component {
   }
 
   _handlePostIgnore = (event) => {
-
+    this.props.onIgnore();
   }
 
   _handlePostFeed = (event) => {
-
+    //FirebaseDBService.saveItemToPublicFeed();
   }
   
 }
@@ -84,8 +99,8 @@ const styles = StyleSheet.create({
   width100: {
     width: '100%',
   },
-  width90: {
-    width: '90%',
+  width85: {
+    width: '85%',
   },
   height90: {
     height: '90%',

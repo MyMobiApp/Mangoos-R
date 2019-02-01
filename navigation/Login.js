@@ -59,24 +59,20 @@ export default class LoginScreen extends React.Component {
         console.log("User Info:")
         console.log(user);
 
-        var userData = {
-          handle: user.handle,
-          email: user.email, 
-          first_name: user.first_name, 
-          last_name: user.last_name,
-          picture_url: user.picture_url, 
-          full_name: user.name
-        };
-
         FirebaseDBService.getUserProfile(user.email).then(data => {
+          data.picture_url = user.photoURL+'?height=200';
           DataService.saveProfileData(data);
+
+          this.setState({ loggedIn: true, authenticating: false, userInfo: data });
         });
-        this.setState({ loggedIn: true, authenticating: false, userInfo: userData });
         // User is signed in.
       }
       else {
         this.setState({ loggedIn: false, authenticating: false, userInfo: null });
       }
+    }, error => {
+      console.log("onAuthStateChanged Error : ", error);
+      this.setState({ loggedIn: false, authenticating: false, userInfo: null });
     });
 
     return (

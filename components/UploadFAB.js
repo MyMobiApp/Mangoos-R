@@ -51,7 +51,7 @@ export class UploadFAB extends React.Component {
   async uploadAudioAsync(uri, name, mimeType) {
     let userID = DataService.getProfileData().handle;//"manish_mastishka.hotmail.com";
     let sAlbum = "default";
-    let fullPath = `${userID}/`+`${sAlbum}`+`/${new Date().getTime()}-`+name;
+    let fullPath = `${userID}/${sAlbum}/${new Date().getTime()}-`+name;
 
     let blob;
     this.getBlob(uri).then(val => {
@@ -96,7 +96,7 @@ export class UploadFAB extends React.Component {
         
         // Trigger props callback, indicating upload initiated
         //DataService.setMP3UploadProgress(0);
-        this.props.onInit();
+        this.props.onInit(name);
         
         // Start upload, and track upload progress
         let task = FirebaseStorage.uploadAudio(fullPath, blob);
