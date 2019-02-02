@@ -7,6 +7,25 @@ require('firebase/firestore');
 
 import { environment } from '../environments/environment';
 
+export class FeedItem {
+
+  constructor() {
+    this.profile_handle = profile_handle;
+    this.full_name      = full_name;
+    this.post_datetime  = post_datetime;
+    this.post_dateobj   = post_dateobj;
+    this.db_path        = db_path; // location at mp3Collection
+    this.doc_id         = doc_id; // mp3Collection's document ID
+    this.message        = message;
+    this.likes          = likes;
+    // 0: Not available for feed / removed later by user
+    // 1: Available for feed
+    // 2: Forced removed from feed from application admin
+    this.feed_status          = feed_status; 
+    this.feed_removed_date    = feed_removed_date;
+    this.feed_removed_reason  = feed_removed_reason;
+  }
+}
 
 export default class FirebaseDBService {
     

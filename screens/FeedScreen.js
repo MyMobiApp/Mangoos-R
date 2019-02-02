@@ -14,10 +14,7 @@ import { Container } from 'native-base';
 
 import { MonoText } from '../components/StyledText';
 import { AppHeader } from '../components/AppHeader';
-
-const firebase = require('firebase');
-// Required for side-effects
-require('firebase/firestore');
+import { FeedItem } from '../components/FeedItem';
 
 
 export default class FeedScreen extends React.Component {
@@ -25,11 +22,26 @@ export default class FeedScreen extends React.Component {
     header: null
   };
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      feedList: Array(),
+      fetchOffet: null,
+      fetchLimit: 20
+    }
+  }
+
+  componentDidMount() {
+
+  }
+
   render() {
     return (
       <View style={styles.container}>
         <AppHeader title='MGooS'/>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+          <FeedItem />
           <View style={styles.welcomeContainer}>
             <Image
               source={
@@ -60,10 +72,6 @@ export default class FeedScreen extends React.Component {
               <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={styles.helpContainer}>
-            <Button title="Sign Out" onPress={this._signOut}/>
-          </View>
           
         </ScrollView>
 
@@ -76,10 +84,6 @@ export default class FeedScreen extends React.Component {
         </View>
       </View>
     );
-  }
-
-  _signOut() {
-    firebase.auth().signOut();
   }
 
   _maybeRenderDevelopmentModeWarning() {

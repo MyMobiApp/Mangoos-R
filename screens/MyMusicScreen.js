@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, List, FlatList } from 'react-native';
-import { Container } from 'native-base';
+import { Container, View } from 'native-base';
 
 import { ExpoLinksView } from '@expo/samples';
 import { UploadFAB } from '../components/UploadFAB';
@@ -38,15 +38,15 @@ export default class MyMusicScreen extends React.Component {
   }
   
   render() {
-   // this._loadMyMusic();
+   //this._loadMyMusic();
 
     if(this.state.bUploading) {
       return (
         <Container>
           <AppHeader title='Uploading ...'/>
-          <ScrollView style={styles.container}>
+          <View style={styles.container}>
             <UploadProgress progress={this.state.uploadProgress} fileName={this.state.uploadFileName} onIgnore={this._onIgnorePost}></UploadProgress>
-          </ScrollView>
+          </View>
         </Container>
       );
     }
@@ -55,18 +55,20 @@ export default class MyMusicScreen extends React.Component {
         <Container>
           <AppHeader title='MGooS'/>
           <ScrollView style={styles.container}>
-            <FlatList
-              data={this.state.musicList}
-              renderItem={({ item }) => (
-                <ListItem
-                  roundAvatar
-                  title={item.title}
-                  subtitle={item.album}
-                  avatar={{ uri: item.coverImage }}
-                  keyExtractor={item => item.id}
-                />
-              )}
-            />
+            <View>
+              <FlatList
+                data={this.state.musicList}
+                renderItem={({ item }) => (
+                  <ListItem
+                    roundAvatar
+                    title={item.title}
+                    subtitle={item.album}
+                    avatar={{ uri: item.coverImage }}
+                    keyExtractor={item => item.id}
+                  />
+                )}
+              />
+            </View>
           </ScrollView>
           <UploadFAB onInit={this._onUploadInit} onProgress={this._onUploadProgress} onDone={this._onUploadDone} onError={this._onUploadError}/>
         </Container>

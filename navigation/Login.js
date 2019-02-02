@@ -152,9 +152,11 @@ export default class LoginScreen extends React.Component {
     firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential)
     .then( success => { 
       console.log("Firebase success: " + JSON.stringify(success)); 
+    }).catch(error => {
+      console.log("Firebase failed: " + error); 
     });
 
-    DataService.saveProfileData(userData);
+    DataService.setProfileData(userData);
     console.log('Logged into Facebook!', userData);
     this.setState({ loggedIn: true, authenticating: false, userInfo: userData });
   };

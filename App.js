@@ -1,10 +1,13 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
+import { Drawer } from 'native-base';
 //import AppNavigator from './navigation/AppNavigator';
 import Login from './navigation/Login';
 
 import FirebaseDBService from './singleton/FirestoreDB';
+import { UserProfile } from './menu/UserProfile';
+
 import './issues/setTimeoutIssue';
 
 
@@ -18,6 +21,10 @@ export default class App extends React.Component {
 
     FirebaseDBService.init();
   }
+
+  closeDrawer = () => {
+    this.drawer._root.close();
+  };
 
   render() {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
