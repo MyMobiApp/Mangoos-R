@@ -19,18 +19,22 @@ export class AppHeader extends React.Component {
   render(title) {
     return (
       <Header>
+        {/* 
         <Left>
           <Button transparent onPress={this._onMenuPress}>
             <Icon name='menu' />
+          </Button>
+        </Left>
+        */}
+        <Left>
+          <Button transparent onPress={this._onSignOut}>
+            <Icon name='md-power' />
           </Button>
         </Left>
         <Body>
           <Title>{this.state.title}</Title>
         </Body>
         <Right>
-          <Button transparent onPress={this._onSignOut}>
-            <Icon name='share' />
-          </Button>
           <Button transparent onPress={this._onSharePress}>
             <Icon name='share' />
           </Button>
@@ -50,13 +54,12 @@ export class AppHeader extends React.Component {
           style: 'cancel',
         },
         {
-          text: 'OK', 
+          text: 'Yes', 
           onPress: () => firebase.auth().signOut()
         },
       ],
       {cancelable: false},
     );
-    
   }
 
   _onMenuPress = () => {
