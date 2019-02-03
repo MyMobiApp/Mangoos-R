@@ -1,7 +1,8 @@
 import FirebaseDBService from './FirestoreDB';
 
-export default class ProfileService {
+export default class ImageService {
     static profileHandleImgMap = {};
+    static musicCoverImgMap = {};
   
     static getProfileImage(handle) {
       //let key = handle.split(".").join("");

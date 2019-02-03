@@ -7,9 +7,23 @@ require('firebase/firestore');
 
 import { environment } from '../environments/environment';
 
+export class UserProfile {
+
+  constructor(handle, email, first_name, last_name, full_name, picture_url) {
+    this.handle       = handle;
+    this.email        = email;
+    this.first_name   = first_name;
+    this.last_name    = last_name;
+    this.full_name    = full_name;
+    this.picture_url  = picture_url;
+  }
+}
+
 export class FeedItem {
 
-  constructor() {
+  constructor(profile_handle, full_name, post_datetime, 
+              post_dateobj, db_path, doc_id, message, likes,
+              feed_status, feed_removed_date, feed_removed_reason) {
     this.profile_handle = profile_handle;
     this.full_name      = full_name;
     this.post_datetime  = post_datetime;
@@ -318,6 +332,42 @@ export default class FirebaseDBService {
         });
       }
     
+      static getMusicData(fullPath) {
+        
+        return new Promise((resolve, reject) => { 
+          firebase.firestore().doc(fullPath)
+            .get().then(querySnapshot => {
+              if (querySnapshot.exists)
+              {
+                //console.log("Profile found with handle : " + handle);
+                const sPath = querySnapshot.data().fullPath;
+                const pUrl  = (querySnapshot.data().hasOwnProperty('metaData') && 
+                               querySnapshot.data().metaData.hasOwnProperty('common') &&
+                               querySnapshot.data().metaData.common.hasOwnProperty('picture')) ? querySnapshot.data().metaData.common.picture[0].data : null;
+                const albm = (querySnapshot.data().hasOwnProperty('metaData') && 
+                              querySnapshot.data().metaData.hasOwnProperty('common') && 
+                              querySnapshot.data().metaData.common.hasOwnProperty('album')) ? querySnapshot.data().metaData.common.album : querySnapshot.data().albumName;
+                const titl = (querySnapshot.data().hasOwnProperty('metaData') && 
+                              querySnapshot.data().metaData.hasOwnProperty('common') && 
+                              querySnapshot.data().metaData.common.hasOwnProperty('title')) ? querySnapshot.data().metaData.common.title : querySnapshot.data().customName;
+
+                resolve({
+                  album: albm, 
+                  title: titl, 
+                  pictureURL: pUrl, 
+                  storagePath: sPath
+                });
+  
+                // doc.data() is never undefined for query doc snapshots
+                //console.log("Profile picture URL : ", doc.data().picture_url);
+              }
+              else {
+                reject("Can't find music data with fullPath : " + fullPath);
+              }
+            });
+        });
+      }
+
       static getProfileImageURL(handle) {
     
         return new Promise((resolve, reject) => { 

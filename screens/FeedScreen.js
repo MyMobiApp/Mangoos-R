@@ -10,11 +10,14 @@ import {
   Button
 } from 'react-native';
 import { WebBrowser } from 'expo';
-import { Container } from 'native-base';
+import { Spinner } from 'native-base';
 
 import { MonoText } from '../components/StyledText';
 import { AppHeader } from '../components/AppHeader';
 import { FeedItem } from '../components/FeedItem';
+import FirebaseDBService from '../singleton/FirestoreDB';
+import ImageService from '../singleton/ImageService';
+import FirebaseStorage from '../singleton/FirebaseStorage';
 
 
 export default class FeedScreen extends React.Component {
@@ -28,12 +31,37 @@ export default class FeedScreen extends React.Component {
     this.state = {
       feedList: Array(),
       fetchOffet: null,
-      fetchLimit: 20
+      fetchLimit: 20,
+      bLoaded: false
     }
   }
 
   componentDidMount() {
+    this._loadFeed();
+  }
 
+  _renderFeed = () => {
+    
+    return this.state.feedList.map((obj, index, ary) => {
+      //console.log(obj);
+
+      return (
+        <FeedItem
+          key = {obj.id}
+          id = {obj.id} 
+          profileHandle={obj.data.profile_handle} 
+          fullName={obj.data.full_name} 
+          profileImg={obj.data.profileImg} 
+          FeedMsg={obj.data.message} 
+          musicURL={obj.data.musicURL} 
+          musicCover={obj.data.musicCover} 
+          musicTitle={obj.data.musicTitle} 
+          musicAlbum={obj.data.musicAlbum} 
+          postDateTime={obj.data.post_datetime} 
+          likes={obj.data.likes} 
+        />
+      )
+    });
   }
 
   render() {
@@ -41,49 +69,66 @@ export default class FeedScreen extends React.Component {
       <View style={styles.container}>
         <AppHeader title='MGooS'/>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <FeedItem />
-          <View style={styles.welcomeContainer}>
-            <Image
-              source={
-                __DEV__
-                  ? require('../assets/images/robot-dev.png')
-                  : require('../assets/images/robot-prod.png')
-              }
-              style={styles.welcomeImage}
-            />
+          <View>
+            {
+              this.state.bLoaded ? this._renderFeed() : <Spinner color='blue'/>
+            }
           </View>
-
-          <View style={styles.getStartedContainer}>
-            {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>Get started by opening</Text>
-
-            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/HomeScreen.js</MonoText>
-            </View>
-
-            <Text style={styles.getStartedText}>
-              Change this text and your app will automatically reload.
-            </Text>
-          </View>
-
-          <View style={styles.helpContainer}>
-            <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
-              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
-            </TouchableOpacity>
-          </View>
-          
         </ScrollView>
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
       </View>
     );
+  }
+
+  _loadFeed = (event) => {
+    let feedList = this.state.feedList;
+
+    FirebaseDBService.getPublicFeedItemWithOffset(this.state.fetchOffset, this.state.fetchLimit)
+        .then(feedItemAry => {
+      const listLength = feedList.length;
+      
+      feedList = this.state.feedList.concat(feedItemAry);
+      this.setState({fetchOffset: feedItemAry[feedItemAry.length - 1].post_dateobj});
+      
+      if(feedItemAry) {
+        var options = { weekday: "long", year: "numeric", month: "long",   
+            day: "numeric" };
+        feedItemAry.forEach(async (item, index, ary) => {
+          var dateObj = new Date(item.data.post_dateobj);
+          feedList[listLength+index].data.post_datetime = dateObj.toLocaleDateString("en-US", options);
+
+          feedList[listLength+index].data.profileImg = await ImageService.getProfileImage( feedList[listLength+index].data.profile_handle);
+          
+          FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(async obj => {
+            feedList[listLength+index].data.musicAlbum = obj.album;
+            feedList[listLength+index].data.musicTitle = obj.title;
+            feedList[listLength+index].data.musicCover = await FirebaseStorage.getDownloadURL(obj.pictureURL);
+            feedList[listLength+index].data.musicURL   = await FirebaseStorage.getDownloadURL(obj.storagePath);
+
+            if(index == (feedItemAry.length - 1)) {
+              this.setState({bLoaded: true, feedList: feedList});
+  
+              //console.log("Complete Array");
+              //console.log(feedList);
+            }
+          }).catch(error => {
+            console.log("getMusicData Error: " + error);
+          });
+        })
+        
+      }
+      
+      //console.log("Fetched Array");
+      //console.log(feedItemAry);
+      //console.log("Complete Array");
+      //console.log(this.state.feedList);
+
+      if(event) {
+        event.target.complete();
+        if(feedItemAry.length == 0) {
+          event.target.disabled = true;
+        }
+      }
+    });
   }
 
   _maybeRenderDevelopmentModeWarning() {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Grid, Col, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
+import { Dimensions, Image, StyleSheet } from 'react-native';
+import { View, Grid, Col, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
 import { Entypo } from '@expo/vector-icons';
 
 export class FeedItem extends React.Component {
@@ -9,6 +9,7 @@ export class FeedItem extends React.Component {
     super(props);
 
     this.state = {
+      id:             props.id,
       profileHandle:  props.profileHandle,
       profileName:    props.fullName,
       profileImg:     props.profileImg,
@@ -20,6 +21,36 @@ export class FeedItem extends React.Component {
       postDateTime:   props.postDateTime,
       likes:          props.like,
     }
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (this.state.id !== newProps.profileImg) {
+      this.setState({profileImg: newProps.profileImg});
+    }
+
+    if (this.state.musicURL !== newProps.musicURL) {
+      this.setState({musicURL: newProps.musicURL});
+    }
+
+    if (this.state.musicCover !== newProps.musicCover) {
+      this.setState({musicCover: newProps.musicCover});
+    }
+
+    if (this.state.musicTitle !== newProps.musicTitle) {
+      this.setState({musicTitle: newProps.musicTitle});
+    }
+
+    if (this.state.musicAlbum !== newProps.musicAlbum) {
+      this.setState({musicAlbum: newProps.musicAlbum});
+    }
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return (this.state.profileImg !== nextProps.profileImg || 
+            this.state.musicURL !== nextProps.musicURL || 
+            this.state.musicCover !== newProps.musicCover ||
+            this.state.musicTitle !== newProps.musicTitle ||
+            this.state.musicAlbum !== newProps.musicAlbum);
   }
 
   render() {
@@ -34,18 +65,19 @@ export class FeedItem extends React.Component {
             </Body>
           </Left>
         </CardItem>
-        <CardItem>
-          <Left>
-            <Body>
+        <CardItem bordered>
+          <Body>
+            <Image source={{uri: this.state.musicCover}} style={{resizeMode: 'contain', height: 200, width: (Dimensions.get('window').width - 50), flex: 1}}/>
+            <View style={{marginTop: 5, alignItems: 'center', width:'100%'}}>
               <Text>{this.state.musicTitle}</Text>
               <Text note>{this.state.musicAlbum}</Text>
-            </Body>
-          </Left>
-          <Right>
-            <Thumbnail source={{uri: this.state.musicCover}} />
-          </Right>
+            </View>
+            <View style={{marginTop: 10, alignItems: 'flex-start', width:'100%', borderTopWidth:1, borderColor:'silver'}}>
+              <Text style={{margin: 15}}>{this.state.feedMsg}</Text>
+            </View>
+          </Body>
         </CardItem>
-        <CardItem bordered>
+        <CardItem>
           <Grid>
             <Col>
               <Left>

@@ -95,7 +95,7 @@ export default class MyMusicScreen extends React.Component {
           const id    = item.id;
           const title = item.data.hasOwnProperty('metaData') ? item.data.metaData.common.title : item.data.customName;
           const album = item.data.hasOwnProperty('metaData') ? item.data.metaData.common.ablum : item.data.albumName;
-          const uri   = await FirebaseStorage.getMP3DownloadURL(item.fullPath);
+          const uri   = await FirebaseStorage.getDownloadURL(item.fullPath);
           let coverImage = null;
           const duration    = item.data.hasOwnProperty('metaData') ? item.data.metaData.format.duration : null;
           let date = new Date(this.item.data.createdAtISO);
@@ -106,7 +106,7 @@ export default class MyMusicScreen extends React.Component {
             item.data.metaData.common.picture[0].hasOwnProperty('data')) {
               const imgPath = item.data.metaData.common.picture[0].data;
              
-              coverImage  = await FirebaseStorage.getMP3DownloadURL(imgPath);
+              coverImage  = await FirebaseStorage.getDownloadURL(imgPath);
               
               //console.log(this.state.musicList[listLength + + parseInt(key)].thumbnail);
           }
@@ -117,7 +117,7 @@ export default class MyMusicScreen extends React.Component {
           const id    = list[key].id;
           const title = list[key].data.hasOwnProperty('metaData') ? list[key].data.metaData.common.title : list[key].data.customName;
           const album = list[key].data.hasOwnProperty('metaData') ? list[key].data.metaData.common.ablum : list[key].data.albumName;
-          const uri   = await FirebaseStorage.getMP3DownloadURL(list[key].fullPath);
+          const uri   = await FirebaseStorage.getDownloadURL(list[key].fullPath);
           let coverImage = null;
           const duration    = list[key].data.hasOwnProperty('metaData') ? list[key].data.metaData.format.duration : null;
           let date = new Date(this.list[key].data.createdAtISO);
@@ -128,7 +128,7 @@ export default class MyMusicScreen extends React.Component {
             list[key].data.metaData.common.picture[0].hasOwnProperty('data')) {
               const imgPath = list[key].data.metaData.common.picture[0].data;
              
-              coverImage  = await FirebaseStorage.getMP3DownloadURL(imgPath);
+              coverImage  = await FirebaseStorage.getDownloadURL(imgPath);
               
               //console.log(this.state.musicList[listLength + + parseInt(key)].thumbnail);
           }

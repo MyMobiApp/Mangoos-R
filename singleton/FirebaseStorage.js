@@ -4,7 +4,7 @@ require('firebase/firestore');
 
 export default class FirebaseStorage {
 
-    static getMP3DownloadURL(fullPath) {
+    static getDownloadURL(fullPath) {
         return firebase.storage().ref(fullPath).getDownloadURL();
     }
     
