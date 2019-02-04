@@ -214,36 +214,37 @@ export default class FirebaseDBService {
         
         return new Promise((resolve, reject) => { 
             let mp3Collection;
+            const collectionPath = `mp3Collection/${handle}/${album}`;
 
             if(offset) {
-                mp3Collection = firebase.firestore().collection('mp3Collection')
-                .doc(handle).collection(album)
+                mp3Collection = firebase.firestore().collection(collectionPath)
+                //.doc(handle).collection(album)
                 .orderBy('createdAt', 'desc')
                 .startAfter(offset)
                 .limit(limit);
             }
             else {
-                mp3Collection = firebase.firestore().collection('mp3Collection')
-                .doc(handle).collection(album);
+                mp3Collection = firebase.firestore().collection(collectionPath)
+                //.doc(handle).collection(album);
+                .orderBy('createdAt', 'desc')
+                .limit(limit);
             }
 
             console.log("querying getMusicMetaInfoList.... - " + handle + " - " + album + " - " + offset + " - " + limit);
             mp3Collection.get().then(querySnapshot => {
               console.log("Got snapshot...");
-                let list = Array();
+              let list = Array();
 
-                querySnapshot.forEach(docSnapshot => {
-                  console.log(docSnapshot);
-                  list.push({id: docSnapshot.id, data: docSnapshot.data()});
-                });
+              querySnapshot.forEach(docSnapshot => {
+                console.log(docSnapshot);
+                list.push({id: docSnapshot.id, data: docSnapshot.data()});
+              });
 
                 resolve(list);
             }).catch(error => {
               console.log(error);
               reject(error);
             });
-
-            console.log("Done querying getMusicMetaInfoList....");
         });
       }
     
@@ -251,13 +252,13 @@ export default class FirebaseDBService {
         
         return new Promise((resolve, reject) => { 
           firebase.firestore().collection('mp3Collection').doc(handle).collection(album)
-            .onSnapshot(res => {
+            .get().then(res => {
               //alert(res.size);
               if (res.size > 0)
               {
                 let dataAry = Array();
                 res.forEach(action => {
-                  dataAry.push({'id': action.id, 'data': action.data()});
+                  dataAry.push({id: action.id, data: action.data()});
                   //alert(doc.id + " => " + JSON.stringify(doc.data()));
                   // doc.data() is never undefined for query doc snapshots
                 });
@@ -377,7 +378,7 @@ export default class FirebaseDBService {
               {
                 //console.log("Profile found with handle : " + handle);
     
-                querySnapshot.forEach(function(doc) {
+                querySnapshot.forEach(doc => {
                   resolve(doc.data().picture_url);
     
                   // doc.data() is never undefined for query doc snapshots
