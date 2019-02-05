@@ -1,6 +1,8 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
+//import { MenuProvider } from 'react-native-popup-menu';
+
 import { Drawer } from 'native-base';
 //import AppNavigator from './navigation/AppNavigator';
 import Login from './navigation/Login';

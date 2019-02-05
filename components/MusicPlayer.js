@@ -21,7 +21,19 @@ export class PlaylistItem {
         this.coverImage     = coverImage;
         this.duration       = duration;
         this.createdAt      = createdAt;
-	}
+    }
+    
+    toJSON() {
+        return {
+            id: this.id,
+            title: this.title,
+            album: this.album,
+            uri: this.album.uri,
+            coverImage: this.coverImage,
+            duration: this.duration,
+            createdAt: this.album.createdAt
+        }
+    }
 }
 
 const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = Dimensions.get('window');

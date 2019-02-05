@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, FlatList } from 'react-native';
-import { Icon, Container, ListItem, View, Right, Text, Left, Thumbnail, Body, Spinner, Button } from 'native-base';
-import { MaterialIcons } from '@expo/vector-icons'
+import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
+//import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 import { UploadFAB } from '../components/UploadFAB';
 import { UploadProgress } from '../components/UploadProgress';
@@ -10,6 +10,7 @@ import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
 import FirebaseStorage from '../singleton/FirebaseStorage';
+import { MyMusicItem } from '../components/MyMusicItem';
 
 export default class MyMusicScreen extends React.Component {
   static navigationOptions = {
@@ -29,6 +30,8 @@ export default class MyMusicScreen extends React.Component {
       fetchOffset: null,
       fetchLimit: 20,
       bFetching: true,
+      nTrueCount: 0,
+      selected: new Map()
     };
 
     this._loadMyMusic.bind(this);
@@ -40,6 +43,15 @@ export default class MyMusicScreen extends React.Component {
 
   componentDidMount() {
     this._loadMyMusic();
+  }
+
+  _renderItem = (item) => {
+    return (
+      <MyMusicItem 
+        item={item} 
+        onItemPress={this._onThumbnailPress}
+        selected={!!this.state.selected.get(item.id)} />
+    );
   }
   
   render() {
@@ -68,34 +80,21 @@ export default class MyMusicScreen extends React.Component {
         <Container>
           <AppHeader title='MGooS'/>
           <ScrollView style={styles.container}>
-            <View style={{width:'100%'}}>
+            <View style={{width:'100%', backgroundColor: this.state.nTrueCount ? 'silver': 'white'}}>
               <FlatList
                 data={this.state.musicList}
-                keyExtractor = {item => item.id}
-                renderItem={({ item }) => (
-                  <ListItem avatar style={{justifyContent: 'center'}}>
-                    <Left>
-                      <Thumbnail source={{uri: item.coverImage}}/>
-                    </Left>
-                    <Body>
-                      <Text>{item.title}</Text>
-                      <Text note>{item.album}</Text>
-                      <Text style={{color:'blue', fontSize:10}}>{item.createdAt}</Text>
-                    </Body>
-                    <Right>
-                      <View style={{flexDirection: "row"}}>
-                        <Button transparent onPress={this._onAddToPlaylist} style={{alignSelf:'center'}}>
-                          <MaterialIcons size={24} name='playlist-add' color='blue'/>
-                        </Button>
-                        <Text>  </Text>
-                        <Button transparent onPress={this._onSettingsPress} style={{alignSelf:'center'}}>
-                          <MaterialIcons size={24} name='settings' color='blue'/>
-                        </Button>
-                      </View>
-                    </Right>
-                  </ListItem>
-                )}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => this._renderItem(item)}
               />
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
             </View>
           </ScrollView>
           <UploadFAB onInit={this._onUploadInit} onProgress={this._onUploadProgress} onDone={this._onUploadDone} onError={this._onUploadError}/>
@@ -104,12 +103,30 @@ export default class MyMusicScreen extends React.Component {
     }
   }
 
+  _onThumbnailPress = (id) => {
+    //console.log(item);
+    //item.checked = !item.checked;
+    //let index = this.state.musicList.findIndex(o => o.checked === true);
+
+    this.setState((state) => {
+      // copy the map rather than modifying state.
+      const selected = new Map(state.selected);
+      const val = !selected.get(id);
+      selected.set(id, val); // toggle
+
+      nTrueCount = val ? (state.nTrueCount + 1) : (state.nTrueCount - 1)
+      return {selected, nTrueCount};
+    });
+    
+    //this.setState({bAnySelected: (index >= 0) ? true : false, bUpdateList: !this.state.bUpdateList});
+  }
+
   _onAddToPlaylist = () => {
     alert("Add to playlist tapped");
   }
 
-  _onSettingsPress = () => {
-    alert("Settings tapped");
+  _onEditPress = () => {
+    alert("Edit tapped");
   }
 
   _loadMyMusic = () => {
@@ -162,7 +179,8 @@ export default class MyMusicScreen extends React.Component {
           }
 
           let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt);
-          musicList.push(plObj);
+
+          musicList.push(plObj.toJSON());
 
           //console.log("CoverImg: " + coverImage);
           //console.log("MP3 URL: " + uri);
@@ -209,5 +227,5 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 15,
     backgroundColor: '#fff',
-  },
+  }
 });

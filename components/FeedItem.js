@@ -1,7 +1,8 @@
 import React from 'react';
-import { Dimensions, Image, StyleSheet } from 'react-native';
+import { Image, Dimensions, StyleSheet } from 'react-native';
 import { View, Grid, Col, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
 import { Entypo } from '@expo/vector-icons';
+//import { Image } from "react-native-expo-image-cache";
 
 export class FeedItem extends React.Component {
 
@@ -67,6 +68,7 @@ export class FeedItem extends React.Component {
         </CardItem>
         <CardItem bordered>
           <Body>
+            {/* {...{uri: this.state.musicCover}} */}
             <Image source={{uri: this.state.musicCover}} style={{resizeMode: 'contain', height: 200, width: (Dimensions.get('window').width - 50), flex: 1}}/>
             <View style={{marginTop: 5, alignItems: 'center', width:'100%'}}>
               <Text>{this.state.musicTitle}</Text>
