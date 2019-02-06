@@ -3,8 +3,13 @@ import { TouchableOpacity } from 'react-native';
 import { ListItem, View, Right, Text, Left, Thumbnail, Body, Button } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 
+import showPopupMenu from 'react-native-popup-menu-android';
+
 
 export class MyMusicItem extends React.Component {
+
+  settingsButton = null;
+  refSettingsButton = el => this.settingsButton = el;
 
   constructor(props) {
     super(props);
@@ -44,12 +49,31 @@ export class MyMusicItem extends React.Component {
               <MaterialIcons size={24} name='playlist-add' color='blue'/>
             </Button>
             <Text>  </Text>
-            <Button transparent onPress={this._onEditPress} style={{alignSelf:'center'}}>
-              <MaterialIcons size={24} name='edit' color='blue'/>
+            <Button transparent onPress={this._onEditPress} style={{alignSelf:'center'}} ref={this.refSettingsButton}>
+              <MaterialIcons size={24} name='settings' color='blue'/>
             </Button>
           </View>
         </Right>
       </ListItem>
     );
+  }
+
+  _onAddToPlaylist = () => {
+    alert("Add to playlist tapped");
+  }
+
+  _onEditPress = () => {
+    showPopupMenu(
+        [
+            { id:'edit', label:'Quick Edit' },
+            { id:'delete', label:'Trash' }
+        ],
+        this.handleSettingsSelect,
+        this.settingsButton
+    );
+  }
+
+  handleSettingsSelect = (item) => {
+    alert('Pressed: ' + item.label);
   }
 }

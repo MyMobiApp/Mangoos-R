@@ -5,7 +5,7 @@ import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
 
 import { UploadFAB } from '../components/UploadFAB';
 import { UploadProgress } from '../components/UploadProgress';
-import { AppHeader } from '../components/AppHeader';
+import { AppHeader, TabID } from '../components/AppHeader';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
@@ -30,7 +30,7 @@ export default class MyMusicScreen extends React.Component {
       fetchOffset: null,
       fetchLimit: 20,
       bFetching: true,
-      nTrueCount: 0,
+      nSelectCount: 0,
       selected: new Map()
     };
 
@@ -59,7 +59,7 @@ export default class MyMusicScreen extends React.Component {
     if(this.state.bUploading) {
       return (
         <Container>
-          <AppHeader title='Uploading ...'/>
+          <AppHeader id={TabID.MYMUSIC} title='Uploading ...'/>
           <View style={styles.container}>
             <UploadProgress progress={this.state.uploadProgress} fileName={this.state.uploadFileName} onIgnore={this._onIgnorePost}></UploadProgress>
           </View>
@@ -69,7 +69,7 @@ export default class MyMusicScreen extends React.Component {
     else if(!this.state.bLoaded) {
       return (
         <Container>
-          <AppHeader title='MGooS'/>
+          <AppHeader id={TabID.MYMUSIC} title='MGooS'/>
           <Spinner color='blue'/>
         </Container>
       );
@@ -78,9 +78,9 @@ export default class MyMusicScreen extends React.Component {
       //console.log(this.state.musicList);
       return (
         <Container>
-          <AppHeader title='MGooS'/>
+          <AppHeader id={TabID.MYMUSIC} title='MGooS' selectCount={this.state.nSelectCount} selected={this.state.selected}/>
           <ScrollView style={styles.container}>
-            <View style={{width:'100%', backgroundColor: this.state.nTrueCount ? 'silver': 'white'}}>
+            <View style={{width:'100%'}}>
               <FlatList
                 data={this.state.musicList}
                 keyExtractor={item => item.id}
@@ -105,28 +105,17 @@ export default class MyMusicScreen extends React.Component {
 
   _onThumbnailPress = (id) => {
     //console.log(item);
-    //item.checked = !item.checked;
-    //let index = this.state.musicList.findIndex(o => o.checked === true);
-
+    
     this.setState((state) => {
       // copy the map rather than modifying state.
       const selected = new Map(state.selected);
       const val = !selected.get(id);
       selected.set(id, val); // toggle
 
-      nTrueCount = val ? (state.nTrueCount + 1) : (state.nTrueCount - 1)
-      return {selected, nTrueCount};
+      nSelectCount = val ? (state.nSelectCount + 1) : (state.nSelectCount - 1);
+
+      return {selected, nSelectCount};
     });
-    
-    //this.setState({bAnySelected: (index >= 0) ? true : false, bUpdateList: !this.state.bUpdateList});
-  }
-
-  _onAddToPlaylist = () => {
-    alert("Add to playlist tapped");
-  }
-
-  _onEditPress = () => {
-    alert("Edit tapped");
   }
 
   _loadMyMusic = () => {

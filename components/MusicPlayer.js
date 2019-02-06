@@ -73,6 +73,12 @@ export class MusicPlayer extends React.Component {
     };
   }
 
+  componentWillReceiveProps(newProps) {
+    if(this.index != newProps.curIndex) {
+        this.index = newProps.curIndex;
+    }
+  }
+
   componentDidMount() {
     Audio.setAudioModeAsync({
         allowsRecordingIOS: false,

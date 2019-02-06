@@ -13,7 +13,7 @@ import { WebBrowser } from 'expo';
 import { Spinner } from 'native-base';
 
 import { MonoText } from '../components/StyledText';
-import { AppHeader } from '../components/AppHeader';
+import { AppHeader, TabID } from '../components/AppHeader';
 import { FeedItem } from '../components/FeedItem';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import ImageService from '../singleton/ImageService';
@@ -67,7 +67,7 @@ export default class FeedScreen extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <AppHeader title='MGooS'/>
+        <AppHeader id={TabID.FEED} title='MGooS'/>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           <View>
             {
