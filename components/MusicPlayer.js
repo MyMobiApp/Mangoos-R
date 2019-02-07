@@ -28,10 +28,10 @@ export class PlaylistItem {
             id: this.id,
             title: this.title,
             album: this.album,
-            uri: this.album.uri,
+            uri: this.uri,
             coverImage: this.coverImage,
             duration: this.duration,
-            createdAt: this.album.createdAt
+            createdAt: this.createdAt
         }
     }
 }
@@ -54,6 +54,7 @@ export class MusicPlayer extends React.Component {
     super(props);
 
     this.index = 0;
+    this.playID = null;
     this.isSeeking = false;
     this.shouldPlayAtEndOfSeek = false;
     this.playbackInstance = null;
@@ -73,9 +74,26 @@ export class MusicPlayer extends React.Component {
     };
   }
 
-  componentWillReceiveProps(newProps) {
+  async componentWillReceiveProps(newProps) {
+    //console.log(this.props.bPlayCurrent + " - " + newProps.bPlayCurrent);
     if(this.index != newProps.curIndex) {
         this.index = newProps.curIndex;
+
+        if(this.playID != newProps.playlist[this.index].id ) {
+            this._updatePlaybackInstanceForIndex(true);
+        }
+    }
+    else if(this.props.bPlayCurrent != newProps.bPlayCurrent) {
+        this._onPlayPausePressed();
+    }
+
+    let index = newProps.playlist.findIndex( o => o.id === this.playID);
+
+    if(index < 0 && this.playbackInstance != null) {
+        this._advanceIndex(true, newProps);
+        this._updateScreenForLoading(true, "Checking next item in playlist...");
+
+        this._loadNewPlaybackInstance(false);
     }
   }
 
@@ -85,8 +103,8 @@ export class MusicPlayer extends React.Component {
         interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_MIX_WITH_OTHERS,
         playsInSilentModeIOS: true,
         shouldDuckAndroid: true,
-          interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-          playThroughEarpieceAndroid: false      
+        interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+        playThroughEarpieceAndroid: false      
     });
     (async () => {
         await Font.loadAsync({
@@ -98,35 +116,48 @@ export class MusicPlayer extends React.Component {
     this._loadNewPlaybackInstance(false);
 }
 
-async _loadNewPlaybackInstance(playing) {
+async _loadNewPlaybackInstance(playing, playIndex = null) {
+    console.log("playIndex: " + playIndex + " - Index: " + this.index);
+    
+    playIndex = playIndex ? playIndex : this.index;
+    
     if (this.playbackInstance != null) {
         await this.playbackInstance.unloadAsync();
         this.playbackInstance.setOnPlaybackStatusUpdate(null);
         this.playbackInstance = null;
     }
 
-    const source = { uri: this.props.playlist[this.index].uri };
-    const initialStatus = {
-        shouldPlay: playing,
-        rate: this.state.rate,
-        volume: this.state.volume,
-    };
+    if(this.props.playlist.length > 0) {
+        this.playID = this.props.playlist[playIndex].id;
 
-    const { sound, status } = await Audio.Sound.createAsync(
-        source,
-        initialStatus,
-        this._onPlaybackStatusUpdate
-    );
-    this.playbackInstance = sound;
+        const source = { uri: this.props.playlist[playIndex].uri };
+        const initialStatus = {
+            shouldPlay: playing,
+            rate: this.state.rate,
+            volume: this.state.volume,
+        };
 
-    this._updateScreenForLoading(false);
+        const { sound, status } = await Audio.Sound.createAsync(
+            source,
+            initialStatus,
+            this._onPlaybackStatusUpdate
+        );
+        this.playbackInstance = sound;
+
+        this._updateScreenForLoading(false);
+    }
+    else {
+        this._updateScreenForLoading(true, "Playlist is empty...");
+    }
 }
 
-_updateScreenForLoading(isLoading) {
+_updateScreenForLoading(isLoading, instanceName = null) {
+    instanceName = instanceName ? instanceName : LOADING_STRING ;
+
     if (isLoading) {
         this.setState({
             isPlaying: false,
-            playbackInstanceName: LOADING_STRING,
+            playbackInstanceName: instanceName,
             playbackInstanceDuration: null,
             playbackInstancePosition: null,
             isLoading: true,
@@ -162,12 +193,16 @@ _onPlaybackStatusUpdate = status => {
     }
 };
 
-_advanceIndex(forward) {
-    this.index =
-        (this.index + (forward ? 1 : this.props.playlist.length - 1)) %
-        this.props.playlist.length;
+_advanceIndex(forward, newProps = null) {
+    const props = newProps ? newProps : this.props;
 
-    this.props.onPlay(this.index);
+    this.index =
+        (this.index + (forward ? 1 : props.playlist.length - 1)) %
+        props.playlist.length;
+
+    if(newProps == null) {
+        this.props.onPlay(this.index);
+    }
 }
 
 async _updatePlaybackInstanceForIndex(playing) {
@@ -180,9 +215,13 @@ _onPlayPausePressed = () => {
     if (this.playbackInstance != null) {
         if (this.state.isPlaying) {
             this.playbackInstance.pauseAsync();
+            
+            this.props.onPause(this.index);
             KeepAwake.deactivate();
         } else {
             this.playbackInstance.playAsync();
+
+            this.props.onPlay(this.index);
             KeepAwake.activate();
         }
     }
@@ -191,6 +230,8 @@ _onPlayPausePressed = () => {
 _onStopPressed = () => {
     if (this.playbackInstance != null) {
         this.playbackInstance.stopAsync();
+
+        this.props.onPause(this.index);
         KeepAwake.deactivate();
     }
 };
@@ -293,6 +334,22 @@ _getTimestamp() {
     return '';
 }
 
+_renderCoverImage = () => {
+    if(this.props.playlist.length && this.props.playlist[this.index]) {
+        return (
+            <Image
+                style={{width: 50, height: 50}}
+                source={{uri: this.props.playlist[this.index].coverImage }}
+            />
+        );
+    }
+    else {
+        return (
+            <View />
+        );
+    }
+}
+
   render() {
     return !this.state.fontLoaded ? (
         <View />
@@ -300,10 +357,7 @@ _getTimestamp() {
         <View style={styles.container}>
             <Grid>
                 <Col style={styles.coverImgContainer}>
-                    <Image
-                         style={{width: 50, height: 50}}
-                         source={{uri: this.props.playlist[this.index].coverImage}}
-                    />
+                    {this._renderCoverImage()}
                 </Col>
                 <Col>
                 <View style={styles.detailsContainer}>

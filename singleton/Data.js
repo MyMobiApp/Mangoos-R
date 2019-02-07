@@ -7,21 +7,6 @@ export default class DataService {
   static mp3UploadObservable;
   static mp3UploadObserver;
 
-  /*constructor() {
-    let _me_ = this;
-
-    this.mp3UploadObservable = Observable.create(observer => {
-      _me_.mp3UploadObserver = observer;
-    });
-
-    // Dummy call, to initialize observer
-    this.mp3UploadObservable.subscribe(data => {}); 
-  }
-
-  ngOnInit() {
-    
-  }*/
-
   static uploadEvent() {
     return this.mp3UploadObservable;
   }

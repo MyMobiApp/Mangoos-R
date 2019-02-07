@@ -1,16 +1,12 @@
 import React from 'react';
 import {
-    Image,
-    TouchableOpacity,
     Animated,
     Easing,
     StyleSheet,
     Dimensions,
     Platform,
   } from 'react-native';
-import { ListItem, Thumbnail, Text, Body, Right, Left, View, Icon, Button, Col, Row } from 'native-base';
-import { Grid } from 'react-native-easy-grid';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Thumbnail, Text, Right, Left, View, Icon, Button } from 'native-base';
 
 const window = Dimensions.get('window');
 
@@ -62,6 +58,20 @@ export class PlaylistSortableItem extends React.Component {
       }).start();
     }
   }
+
+  _renderPlayPauseButton = () => {
+    //console.log(this.props.idItemPlaying + " - " + this.props.item.id);
+    if(this.props.bPlayCurrent && (this.props.idItemPlaying == this.props.item.id)) {
+      return (
+        <Icon name='md-pause'/>
+      );
+    }
+    else {
+      return (
+        <Icon name='md-play-circle'/>
+      );
+    }
+  }
   
   render() {
     const {item, bLoaded, active} = this.props;
@@ -81,10 +91,10 @@ export class PlaylistSortableItem extends React.Component {
         <Right>
           <View style={{flexDirection: "row"}}>
             <Button transparent onPress={this._onPlayFromPlaylist} style={{alignSelf:'center'}}>
-              <Icon name='md-play-circle'/>
+              {this._renderPlayPauseButton()}
             </Button>
             <Button transparent onPress={this._onRemoveFromPlaylist} style={{alignSelf:'center'}}>
-              <Icon name='md-close-circle-outline'/>
+              <Icon name='md-close-circle-outline' />
             </Button>
           </View>
         </Right>
@@ -93,11 +103,11 @@ export class PlaylistSortableItem extends React.Component {
   }
 
   _onPlayFromPlaylist = () => {
-    alert("_onPlayFromPlaylist");
+    this.props.onPlay(this.props.item.id);
   }
 
   _onRemoveFromPlaylist = () => {
-      alert("_onRemoveFromPlaylist");
+    this.props.onRemove(this.props.item.id);
   }
 }
   
@@ -164,7 +174,7 @@ const styles = StyleSheet.create({
   rowH: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'silver',
+    backgroundColor: 'palegreen',
     padding: 5,
     /*height: 80,*/
     flex: 1,

@@ -46,19 +46,37 @@ export default class PlaylistScreen extends React.Component {
 
     this.state = {
       playlist: PLAYLIST,
-      curIndex: 0
-    }
-  }
+			curIndex: 0,
+			bPlayCurrent: false,
+			idItemPlaying: null
+		}
+	}
+	
+	/*componentDidMount() {
+		PLAYLIST.forEach(item => {
+			this._onAddItemToPlaylist(item.toJSON());
+		})
+	}*/
 
 	_renderRow = ({key, index, data, active}) => {
-		//console.log(this.state.playlist);
-		console.log("Index: " + index + " - Key: " + key + " - curIndex: " + this.state.curIndex);
+		//console.log(data);
+		//console.log("Index: " + index + " - Key: " + key + " - curIndex: " + this.state.curIndex);
 
 		let bLoaded = (index == this.state.curIndex && !this.bMoving) ? true : false;
-		
-    return (
-			<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} />
-		);
+		if(data) {
+			return (
+				<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} 
+					idItemPlaying={this.state.idItemPlaying}
+					onRemove={this._onRemove}
+					onPlay={this._onPlayPlaylist}
+					bPlayCurrent={this.state.bPlayCurrent} />
+			);
+		}
+		else {
+			return (
+				<View />
+			);
+		}
 	}
 	
   render() {
@@ -73,13 +91,50 @@ export default class PlaylistScreen extends React.Component {
 						onChangeOrder={this._onChangeOrder} 
 						onReleaseRow={this._onReleaseRow}
 						onActivateRow={this._onActivateRow} />
-				<MusicPlayer curIndex={this.state.curIndex} playlist={this.state.playlist} onPlay={this._onPlay}/>
+				<MusicPlayer curIndex={this.state.curIndex} 
+						playlist={this.state.playlist} 
+						onPlay={this._onPlayPlayer} 
+						onPause={this._onPausePlayer}
+						bPlayCurrent={this.state.bPlayCurrent}/>
 			</Container>
 			);
-  }
+	}
 
-  _onPlay = (index) => {
-		this.setState({curIndex: index});
+	_onAddItemToPlaylist = (plItem) => {
+		let pl = this.state.playlist;
+		pl.push(plItem);
+
+		console.log(pl);
+
+		let id = pl[this.state.curIndex].id;
+
+		this.setState({playlist: pl, idItemPlaying: id});
+	}
+	
+	_onPlayPlaylist = (id) => {
+		let index = this.state.playlist.findIndex( o => o.id === id);
+		let pc = (this.state.curIndex == index) ? !this.state.bPlayCurrent : true;
+		
+		this.setState({curIndex: index, bPlayCurrent: pc, idItemPlaying: id});
+	}
+
+  _onPlayPlayer = (index) => {
+		this.setState({curIndex: index, bPlayCurrent: true, idItemPlaying: this.state.playlist[index].id});
+	}
+
+	_onPausePlayer = (index) => {
+		this.setState({bPlayCurrent: false});
+	}
+
+	_onRemove = (id) => {
+		let pl = this.state.playlist;
+		let index = pl.findIndex( o => o.id === id);
+
+		pl.splice(index, 1);
+
+		console.log(pl);
+
+		this.setState({playlist: pl});
 	}
 
 	_onActivateRow = (key) => {

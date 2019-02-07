@@ -50,6 +50,7 @@ export default class MyMusicScreen extends React.Component {
       <MyMusicItem 
         item={item} 
         onItemPress={this._onThumbnailPress}
+        onAddToPlaylist={this._onAddToPlaylist}
         selected={!!this.state.selected.get(item.id)} />
     );
   }
@@ -101,6 +102,10 @@ export default class MyMusicScreen extends React.Component {
         </Container>
       );
     }
+  }
+
+  _onAddToPlaylist = () => {
+    
   }
 
   _onThumbnailPress = (id) => {
