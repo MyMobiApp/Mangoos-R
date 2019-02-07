@@ -117,7 +117,7 @@ export class MusicPlayer extends React.Component {
 }
 
 async _loadNewPlaybackInstance(playing, playIndex = null) {
-    console.log("playIndex: " + playIndex + " - Index: " + this.index);
+    //console.log("playIndex: " + playIndex + " - Index: " + this.index);
     
     playIndex = playIndex ? playIndex : this.index;
     
@@ -354,7 +354,10 @@ _renderCoverImage = () => {
     return !this.state.fontLoaded ? (
         <View />
         ) : (	
-        <View style={styles.container}>
+        <View style={styles.container} onLayout={(event) => {
+            var {x,y,width,height} = event.nativeEvent.layout;
+            this.props.onLayout({x,y,width,height});
+          }}>
             <Grid>
                 <Col style={styles.coverImgContainer}>
                     {this._renderCoverImage()}
@@ -479,7 +482,7 @@ _renderCoverImage = () => {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
+        flex: 1,
         flexDirection: 'column',
         width: DEVICE_WIDTH - 10,
 		justifyContent: 'space-between',

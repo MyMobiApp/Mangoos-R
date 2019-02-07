@@ -1,18 +1,28 @@
+import { Observable } from 'rxjs';
 import FirebaseDBService from './FirestoreDB';
 
 export default class DataService {
   static profileData;
   static feedItem = null;
-  static mp3UploadProgress = 0;
-  static mp3UploadObservable;
-  static mp3UploadObserver;
+  static plItemAry = Array();
+  static playlistObservable;
+  static playlistObserver;
 
-  static uploadEvent() {
-    return this.mp3UploadObservable;
+  static InitAddToPlaylistEvent() {
+    this.playlistObservable = Observable.create(observer => {
+      this.playlistObserver = observer;
+    });
+
+    this.playlistObservable.subscribe(data => {}); 
   }
 
-  static getmp3UploadProgress() {
-    return this.mp3UploadProgress;
+  static AddToPlaylist(item) {
+    this.plItemAry.push(item);
+    this.playlistObserver.next(item);
+  }
+
+  static getPlaylistItem() {
+    return plItemAry;
   }
 
   static setPublicFeedItem(feedItem) {
@@ -23,13 +33,7 @@ export default class DataService {
     return this.feedItem;
   }
 
-  static setMP3UploadProgress(progress) {
-    this.mp3UploadProgress = progress;
-
-    //this.mp3UploadObserver.next(progress);
-    //alert("In setMP3UploadProgress : "+ progress);
-  }
-
+  
   static getProfileData() {
     //console.log("Returning ProfileData: " + JSON.stringify(this.profileData));
     return this.profileData;
@@ -50,17 +54,5 @@ export default class DataService {
 
   static updateProfileData(pd) {
     this.profileData = Object.assign({}, pd);
-  }
-
-  static imgSrc(format, base64data) {
-    return this.sanitizer.bypassSecurityTrustUrl('data:'+format+';base64,' + base64data);
-  }
-
-  static rawImgSrc(format, data) {
-    return ('data:'+format+';base64,' + data);
-  }
-
-  static sanitizeImg(imgData) {
-    return this.sanitizer.bypassSecurityTrustUrl(imgData);
   }
 }

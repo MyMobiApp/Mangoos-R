@@ -7,6 +7,8 @@ import { AppHeader, TabID } from '../components/AppHeader';
 import { PlaylistSortableItem } from '../components/PlaylistSortableItem'
 
 import SortableList from 'react-native-sortable-list';
+import DataService from '../singleton/Data';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const PLAYLIST = [
 	new PlaylistItem(
@@ -38,6 +40,8 @@ export default class PlaylistScreen extends React.Component {
 	};
 	
 	nextOrder = null;
+	elementPlayer = null;
+  refPlayer = el => this.elementPlayer = el;
 
   constructor(props) {
     super(props);
@@ -48,15 +52,16 @@ export default class PlaylistScreen extends React.Component {
       playlist: PLAYLIST,
 			curIndex: 0,
 			bPlayCurrent: false,
-			idItemPlaying: null
+			idItemPlaying: null,
+			bottomMargin: 0
 		}
 	}
 	
-	/*componentDidMount() {
-		PLAYLIST.forEach(item => {
-			this._onAddItemToPlaylist(item.toJSON());
-		})
-	}*/
+	componentDidMount() {
+		DataService.playlistObservable.subscribe(item => {
+			this._onAddItemToPlaylist(item);
+		});
+	}
 
 	_renderRow = ({key, index, data, active}) => {
 		//console.log(data);
@@ -84,31 +89,33 @@ export default class PlaylistScreen extends React.Component {
 			<Container>
 				<AppHeader id={TabID.PLAYLIST} title='MGooS' />
 				<SortableList
-						style={styles.list}
-						contentContainerStyle={styles.contentContainer}
-						data={this.state.playlist}
-						renderRow={this._renderRow} 
-						onChangeOrder={this._onChangeOrder} 
-						onReleaseRow={this._onReleaseRow}
-						onActivateRow={this._onActivateRow} />
+					style={{flex: 1, marginBottom: this.state.bottomMargin}}
+					showsVerticalScrollIndicator={true}
+					contentContainerStyle={styles.contentContainer}
+					data={this.state.playlist}
+					renderRow={this._renderRow} 
+					onChangeOrder={this._onChangeOrder} 
+					onReleaseRow={this._onReleaseRow}
+					onActivateRow={this._onActivateRow} />
 				<MusicPlayer curIndex={this.state.curIndex} 
-						playlist={this.state.playlist} 
-						onPlay={this._onPlayPlayer} 
-						onPause={this._onPausePlayer}
-						bPlayCurrent={this.state.bPlayCurrent}/>
+					playlist={this.state.playlist} 
+					onPlay={this._onPlayPlayer} 
+					onPause={this._onPausePlayer}
+					bPlayCurrent={this.state.bPlayCurrent}
+					onLayout={this._onMusicPlayerLayout}
+					ref={this.refPlayer}/>
 			</Container>
 			);
 	}
 
+	_onMusicPlayerLayout = (layout) => {
+		console.log(layout);
+		
+		this.setState({bottomMargin: (layout.height + 10)});
+	}
+
 	_onAddItemToPlaylist = (plItem) => {
-		let pl = this.state.playlist;
-		pl.push(plItem);
-
-		console.log(pl);
-
-		let id = pl[this.state.curIndex].id;
-
-		this.setState({playlist: pl, idItemPlaying: id});
+		this.setState({playlist: [...this.state.playlist, plItem]});
 	}
 	
 	_onPlayPlaylist = (id) => {
@@ -189,6 +196,6 @@ const styles = StyleSheet.create({
     }),
   },
   list: {
-    flex: 1,
+		flex: 1
 	},
 });

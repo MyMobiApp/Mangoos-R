@@ -1,7 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, FlatList } from 'react-native';
+import { ToastAndroid, ScrollView, StyleSheet, FlatList } from 'react-native';
 import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
-//import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 import { UploadFAB } from '../components/UploadFAB';
 import { UploadProgress } from '../components/UploadProgress';
@@ -104,8 +103,11 @@ export default class MyMusicScreen extends React.Component {
     }
   }
 
-  _onAddToPlaylist = () => {
-    
+  _onAddToPlaylist = (item) => {
+    DataService.AddToPlaylist(item);
+
+    ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
+      ToastAndroid.SHORT, ToastAndroid.CENTER);
   }
 
   _onThumbnailPress = (id) => {

@@ -95,7 +95,6 @@ export class UploadFAB extends React.Component {
         //_me_.backgroundMode.enable();
         
         // Trigger props callback, indicating upload initiated
-        //DataService.setMP3UploadProgress(0);
         this.props.onInit(name);
         
         // Start upload, and track upload progress

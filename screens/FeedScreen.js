@@ -12,12 +12,12 @@ import {
 import { WebBrowser } from 'expo';
 import { Spinner } from 'native-base';
 
-import { MonoText } from '../components/StyledText';
 import { AppHeader, TabID } from '../components/AppHeader';
 import { FeedItem } from '../components/FeedItem';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import ImageService from '../singleton/ImageService';
 import FirebaseStorage from '../singleton/FirebaseStorage';
+import DataService from '../singleton/Data';
 
 
 export default class FeedScreen extends React.Component {
@@ -34,6 +34,8 @@ export default class FeedScreen extends React.Component {
       fetchLimit: 20,
       bLoaded: false
     }
+
+    DataService.InitAddToPlaylistEvent();
   }
 
   componentDidMount() {

@@ -59,7 +59,7 @@ export class MyMusicItem extends React.Component {
   }
 
   _onAddToPlaylist = () => {
-    alert("Add to playlist tapped");
+    this.props.onAddToPlaylist(this.props.item);
   }
 
   _onEditPress = () => {
