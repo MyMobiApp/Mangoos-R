@@ -22,6 +22,10 @@ export default class DataService {
   }
 
   static getPlaylistItem() {
+    let plItemAry = this.plItemAry;
+
+    this.plItemAry = Array();
+    
     return plItemAry;
   }
 

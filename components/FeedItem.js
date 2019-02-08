@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, Dimensions, StyleSheet } from 'react-native';
 import { View, Grid, Col, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
 import { Entypo } from '@expo/vector-icons';
+import { PlaylistItem } from './MusicPlayer';
 //import { Image } from "react-native-expo-image-cache";
 
 export class FeedItem extends React.Component {
@@ -19,6 +20,7 @@ export class FeedItem extends React.Component {
       musicCover:     props.musicCover,
       musicTitle:     props.musicTitle,
       musicAlbum:     props.musicAlbum,
+      musicDuration:  props.musicDuration,
       postDateTime:   props.postDateTime,
       likes:          props.like,
     }
@@ -88,9 +90,9 @@ export class FeedItem extends React.Component {
             </Col>
             <Col>
             <Right>
-              <Button small transparent textStyle={{color: '#87838B', borderWidth: 1, borderColor: 'silver'}}>
+              <Button small transparent onPress={this._onAddToPlaylist} textStyle={styles.textStyle}>
                 <Text>Add to Playlist</Text>
-                <Entypo name="add-to-list" size={20} color={'#87838B'}/>
+                <Entypo name="add-to-list" size={20} color={'blue'}/>
               </Button>
             </Right>
             </Col>
@@ -99,11 +101,35 @@ export class FeedItem extends React.Component {
       </Card>
     );
   }
+
+  _onAddToPlaylist = () => {
+    const item = this._getPlaylistItemObject();
+
+    //console.log(item);
+    this.props.onAddToPlaylist(item);
+  }
+
+  _getPlaylistItemObject = () => {
+    let playlistItem = new PlaylistItem(this.state.id, 
+        this.state.musicTitle, 
+        this.state.musicAlbum, 
+        this.state.musicURL, 
+        this.state.musicCover, 
+        this.state.musicDuration,
+        this.state.postDateTime);
+
+    return playlistItem.toJSON();
+  }
 }
 
 const styles = StyleSheet.create({
   card: {
     margin: 5,
     flex: 0
+  },
+  textStyle:{
+    color: '#87838B', 
+    borderWidth: 1, 
+    borderColor: 'silver'
   }
 });

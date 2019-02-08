@@ -16,6 +16,7 @@ export class UploadProgress extends React.Component {
   }
 
   componentWillReceiveProps(newProps) {
+    console.log(newProps.progress);
     if (this.state.progress !== newProps.progress) {
       this.setState({progress: newProps.progress});
     }
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     color: '#ff0000'
   },
   progressBar: {
-    flex: 1, 
+    flex: 2,
     flexDirection: 'row'
   },
   progressText: {

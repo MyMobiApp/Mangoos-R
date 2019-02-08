@@ -103,6 +103,10 @@ export default class MyMusicScreen extends React.Component {
     }
   }
 
+  _onOpenDialog = () => {
+    return
+  }
+
   _onAddToPlaylist = (item) => {
     DataService.AddToPlaylist(item);
 

@@ -1,13 +1,12 @@
 import React from 'react';
 import {
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
-  Button
+  FlatList,
+  ToastAndroid
 } from 'react-native';
 import { WebBrowser } from 'expo';
 import { Spinner } from 'native-base';
@@ -31,7 +30,7 @@ export default class FeedScreen extends React.Component {
     this.state = {
       feedList: Array(),
       fetchOffet: null,
-      fetchLimit: 20,
+      fetchLimit: 10,
       bLoaded: false
     }
 
@@ -42,7 +41,7 @@ export default class FeedScreen extends React.Component {
     this._loadFeed();
   }
 
-  _renderFeed = () => {
+  /*_renderFeed = () => {
     
     return this.state.feedList.map((obj, index, ary) => {
       //console.log(obj);
@@ -59,11 +58,53 @@ export default class FeedScreen extends React.Component {
           musicCover={obj.data.musicCover} 
           musicTitle={obj.data.musicTitle} 
           musicAlbum={obj.data.musicAlbum} 
+          musicDuration={obj.data.musicDuration}
           postDateTime={obj.data.post_datetime} 
-          likes={obj.data.likes} 
+          likes={obj.data.likes}
+          onAddToPlaylist={this._onAddToPlaylist}
         />
       )
     });
+  }*/
+
+  _renderItem = (item) => {
+    return (
+      <FeedItem
+        key = {item.id}
+        id = {item.id} 
+        profileHandle={item.data.profile_handle} 
+        fullName={item.data.full_name} 
+        profileImg={item.data.profileImg} 
+        FeedMsg={item.data.message} 
+        musicURL={item.data.musicURL} 
+        musicCover={item.data.musicCover} 
+        musicTitle={item.data.musicTitle} 
+        musicAlbum={item.data.musicAlbum} 
+        musicDuration={item.data.musicDuration}
+        postDateTime={item.data.post_datetime} 
+        likes={item.data.likes}
+        onAddToPlaylist={this._onAddToPlaylist}
+      />
+    )
+  }
+
+  _renderFlatList = () => {
+    if(this.state.bLoaded) {
+      return (
+        <FlatList
+          data={this.state.feedList}
+          keyExtractor={item => item.id}
+          onEndReachedThreshold={0.2}
+          onEndReached={this._onListEndReached}
+          renderItem={({ item }) => this._renderItem(item)}
+        />
+      );
+    }
+    else {
+      return (
+        <Spinner color='blue'/>
+      );
+    }
   }
 
   render() {
@@ -73,7 +114,7 @@ export default class FeedScreen extends React.Component {
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           <View>
             {
-              this.state.bLoaded ? this._renderFeed() : <Spinner color='blue'/>
+              this._renderFlatList()
             }
           </View>
         </ScrollView>
@@ -101,10 +142,11 @@ export default class FeedScreen extends React.Component {
           feedList[listLength+index].data.profileImg = await ImageService.getProfileImage( feedList[listLength+index].data.profile_handle);
           
           FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(async obj => {
-            feedList[listLength+index].data.musicAlbum = obj.album;
-            feedList[listLength+index].data.musicTitle = obj.title;
-            feedList[listLength+index].data.musicCover = await FirebaseStorage.getDownloadURL(obj.pictureURL);
-            feedList[listLength+index].data.musicURL   = await FirebaseStorage.getDownloadURL(obj.storagePath);
+            feedList[listLength+index].data.musicAlbum    = obj.album;
+            feedList[listLength+index].data.musicTitle    = obj.title;
+            feedList[listLength+index].data.musicDuration = obj.duration;
+            feedList[listLength+index].data.musicCover    = await FirebaseStorage.getDownloadURL(obj.pictureURL);
+            feedList[listLength+index].data.musicURL      = await FirebaseStorage.getDownloadURL(obj.storagePath);
 
             if(index == (feedItemAry.length - 1)) {
               this.setState({bLoaded: true, feedList: feedList});
@@ -131,6 +173,17 @@ export default class FeedScreen extends React.Component {
         }
       }
     });
+  }
+
+  _onListEndReached = (distanceFromEnd) => {
+    console.log(distanceFromEnd);
+  }
+
+  _onAddToPlaylist = (item) => {
+    DataService.AddToPlaylist(item);
+
+    ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
+      ToastAndroid.SHORT, ToastAndroid.CENTER);
   }
 
   _maybeRenderDevelopmentModeWarning() {

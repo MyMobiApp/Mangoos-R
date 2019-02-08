@@ -351,12 +351,15 @@ export default class FirebaseDBService {
                 const titl = (querySnapshot.data().hasOwnProperty('metaData') && 
                               querySnapshot.data().metaData.hasOwnProperty('common') && 
                               querySnapshot.data().metaData.common.hasOwnProperty('title')) ? querySnapshot.data().metaData.common.title : querySnapshot.data().customName;
-
+                const dur  = (querySnapshot.data().hasOwnProperty('metaData') && 
+                              querySnapshot.data().metaData.hasOwnProperty('format') && 
+                              querySnapshot.data().metaData.format.hasOwnProperty('duration')) ? querySnapshot.data().metaData.format.duration : null;
                 resolve({
                   album: albm, 
                   title: titl, 
                   pictureURL: pUrl, 
-                  storagePath: sPath
+                  storagePath: sPath,
+                  duration: dur
                 });
   
                 // doc.data() is never undefined for query doc snapshots

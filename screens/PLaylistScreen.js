@@ -40,16 +40,14 @@ export default class PlaylistScreen extends React.Component {
 	};
 	
 	nextOrder = null;
-	elementPlayer = null;
-  refPlayer = el => this.elementPlayer = el;
-
+	
   constructor(props) {
     super(props);
 
 		this.bMoving = false;
 
     this.state = {
-      playlist: PLAYLIST,
+      playlist: Array(),
 			curIndex: 0,
 			bPlayCurrent: false,
 			idItemPlaying: null,
@@ -57,8 +55,13 @@ export default class PlaylistScreen extends React.Component {
 		}
 	}
 	
+	componentWillMount() {
+		this.setState({playlist: DataService.getPlaylistItem()});
+	}
+
 	componentDidMount() {
 		DataService.playlistObservable.subscribe(item => {
+			//console.log(item);
 			this._onAddItemToPlaylist(item);
 		});
 	}
@@ -68,7 +71,7 @@ export default class PlaylistScreen extends React.Component {
 		//console.log("Index: " + index + " - Key: " + key + " - curIndex: " + this.state.curIndex);
 
 		let bLoaded = (index == this.state.curIndex && !this.bMoving) ? true : false;
-		if(data) {
+		if(data && !this.bMoving) {
 			return (
 				<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} 
 					idItemPlaying={this.state.idItemPlaying}
@@ -85,6 +88,7 @@ export default class PlaylistScreen extends React.Component {
 	}
 	
   render() {
+		
 		return (
 			<Container>
 				<AppHeader id={TabID.PLAYLIST} title='MGooS' />
@@ -102,8 +106,7 @@ export default class PlaylistScreen extends React.Component {
 					onPlay={this._onPlayPlayer} 
 					onPause={this._onPausePlayer}
 					bPlayCurrent={this.state.bPlayCurrent}
-					onLayout={this._onMusicPlayerLayout}
-					ref={this.refPlayer}/>
+					onLayout={this._onMusicPlayerLayout} />
 			</Container>
 			);
 	}

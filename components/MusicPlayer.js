@@ -75,10 +75,11 @@ export class MusicPlayer extends React.Component {
   }
 
   async componentWillReceiveProps(newProps) {
-    //console.log(this.props.bPlayCurrent + " - " + newProps.bPlayCurrent);
+    //console.log(this.playID + " - " + newProps.bPlayCurrent);
     if(this.index != newProps.curIndex) {
         this.index = newProps.curIndex;
 
+        console.log(this.playID + " - " + newProps.playlist[this.index].id);
         if(this.playID != newProps.playlist[this.index].id ) {
             this._updatePlaybackInstanceForIndex(true);
         }
@@ -94,6 +95,15 @@ export class MusicPlayer extends React.Component {
         this._updateScreenForLoading(true, "Checking next item in playlist...");
 
         this._loadNewPlaybackInstance(false);
+    }
+
+    console.log(this.props.playlist.length + " - " + newProps.playlist.length);
+    if(this.props.playlist.length == 0 && newProps.playlist.length > 0) {
+        this.index = newProps.curIndex;
+        
+        this._updateScreenForLoading(true, "Checking next item in playlist...");
+
+        this._loadNewPlaybackInstance(false, null, newProps);
     }
   }
 
@@ -116,10 +126,11 @@ export class MusicPlayer extends React.Component {
     this._loadNewPlaybackInstance(false);
 }
 
-async _loadNewPlaybackInstance(playing, playIndex = null) {
+async _loadNewPlaybackInstance(playing, playIndex = null, newProps = null) {
     //console.log("playIndex: " + playIndex + " - Index: " + this.index);
     
     playIndex = playIndex ? playIndex : this.index;
+    props = newProps ? newProps : this.props;
     
     if (this.playbackInstance != null) {
         await this.playbackInstance.unloadAsync();
@@ -127,10 +138,10 @@ async _loadNewPlaybackInstance(playing, playIndex = null) {
         this.playbackInstance = null;
     }
 
-    if(this.props.playlist.length > 0) {
-        this.playID = this.props.playlist[playIndex].id;
+    if(props.playlist.length > 0) {
+        this.playID = props.playlist[playIndex].id;
 
-        const source = { uri: this.props.playlist[playIndex].uri };
+        const source = { uri: props.playlist[playIndex].uri };
         const initialStatus = {
             shouldPlay: playing,
             rate: this.state.rate,
