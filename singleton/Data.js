@@ -25,7 +25,7 @@ export default class DataService {
     let plItemAry = this.plItemAry;
 
     this.plItemAry = Array();
-    
+
     return plItemAry;
   }
 
@@ -58,5 +58,11 @@ export default class DataService {
 
   static updateProfileData(pd) {
     this.profileData = Object.assign({}, pd);
+  }
+
+  static getFirebaseStorageReadURL(storagePath) {
+    const bucket = 'mgoos-mvp.appspot.com';
+
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(storagePath)}?alt=media`;
   }
 }

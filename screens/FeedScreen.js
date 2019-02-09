@@ -129,27 +129,10 @@ export default class FeedScreen extends React.Component {
               feedList[listLength+index].data.musicAlbum    = obj.album;
               feedList[listLength+index].data.musicTitle    = obj.title;
               feedList[listLength+index].data.musicDuration = obj.duration;
+
+              feedList[listLength+index].data.musicCover    = DataService.getFirebaseStorageReadURL(obj.pictureURL);//await FirebaseStorage.getDownloadURL(obj.pictureURL);
+              feedList[listLength+index].data.musicURL      = DataService.getFirebaseStorageReadURL(obj.storagePath);//await FirebaseStorage.getDownloadURL(obj.storagePath);
               
-              try{
-                feedList[listLength+index].data.musicCover    = await FirebaseStorage.getDownloadURL(obj.pictureURL);
-              }
-              catch(error) {
-                feedList[listLength+index].data.musicCover = null;
-                
-                //console.log("getMusicData musicCover Error: ");
-                //console.log(error);
-              }
-
-              try{
-                feedList[listLength+index].data.musicURL      = await FirebaseStorage.getDownloadURL(obj.storagePath);
-              }
-              catch(error) {
-                feedList[listLength+index].data.musicURL = null;
-
-                //console.log("getMusicData musicURL Error: ");
-                //console.log(error);
-              }
-
               if(index == (feedItemAry.length - 1)) {
                 this.setState({bLoaded: true, bShowSpinner: false, refreshing: false, feedList: feedList});
     

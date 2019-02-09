@@ -166,30 +166,19 @@ export default class MyMusicScreen extends React.Component {
           const album = (item.data.hasOwnProperty('metaData') && 
                          item.data.metaData.hasOwnProperty('common') && 
                          item.data.metaData.common.hasOwnProperty('album')) ? item.data.metaData.common.album : item.data.albumName;
-          let uri = null;
-          try {
-            uri = await FirebaseStorage.getDownloadURL(item.data.fullPath);
-          }
-          catch (error) {
-            console.log("URI For -> ");
-            console.log(error);
-            console.log(item);
-          }
+          let uri = DataService.getFirebaseStorageReadURL(item.data.fullPath);
+          //await FirebaseStorage.getDownloadURL(item.data.fullPath);
+          
           let coverImage = (item.data.hasOwnProperty('metaData') && 
                             item.data.metaData.hasOwnProperty('common') &&
                             item.data.metaData.common.hasOwnProperty('picture')) ? item.data.metaData.common.picture[0].data : null;
           const duration = item.data.hasOwnProperty('metaData') ? item.data.metaData.format.duration : null;
           let date       = new Date(item.data.createdAtISO);
           const createdAt = date.toLocaleDateString();
-          try {
-            coverImage  = coverImage ? await FirebaseStorage.getDownloadURL(coverImage) : null;
-          }
-          catch(error) {
-            console.log("coverImage For -> ");
-            console.log(error);
-            console.log(item);
-          }
-
+          
+          coverImage  = DataService.getFirebaseStorageReadURL(coverImage);
+          //coverImage ? await FirebaseStorage.getDownloadURL(coverImage) : null;
+          
           let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt, `mp3Collection/${handle}/default/${id}`);
 
           musicList.push(plObj.toJSON());
