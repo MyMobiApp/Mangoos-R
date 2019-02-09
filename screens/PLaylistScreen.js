@@ -9,30 +9,7 @@ import { PlaylistSortableItem } from '../components/PlaylistSortableItem'
 import SortableList from 'react-native-sortable-list';
 import DataService from '../singleton/Data';
 import { ScrollView } from 'react-native-gesture-handler';
-
-const PLAYLIST = [
-	new PlaylistItem(
-		'1',
-    	'Comfort Fit - “Sorry”',
-    	'Default',
-		'https://s3.amazonaws.com/exp-us-standard/audio/playlist-example/Comfort_Fit_-_03_-_Sorry.mp3',
-		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
-	),
-	new PlaylistItem(
-		'2',
-    	'Mildred Bailey – “All Of Me”',
-    	'Default',
-		'https://ia800304.us.archive.org/34/items/PaulWhitemanwithMildredBailey/PaulWhitemanwithMildredBailey-AllofMe.mp3',
-		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
-	),
-	new PlaylistItem(
-		'3',
-    	'Podington Bear - “Rubber Robot”',
-    	'Default',
-		'https://s3.amazonaws.com/exp-us-standard/audio/playlist-example/Podington_Bear_-_Rubber_Robot.mp3',
-		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
-	),
-];
+import NativeStorage from '../singleton/NativeStorage';
 
 export default class PlaylistScreen extends React.Component {
   static navigationOptions = {
@@ -55,8 +32,32 @@ export default class PlaylistScreen extends React.Component {
 		}
 	}
 	
-	componentWillMount() {
-		this.setState({playlist: DataService.getPlaylistItem()});
+	async componentWillMount() {
+		const plItems = DataService.getPlaylistItem();
+		let nsPlaylist = Array();
+
+		// Fetch playlist items from native storage
+		try{
+			const plist = await NativeStorage.getPlaylist();
+			nsPlaylist = JSON.parse(plist);
+
+			nsPlaylist = (nsPlaylist && nsPlaylist.length > 0) ? nsPlaylist.concat(plItems) : plItems;
+		}
+		catch(error) {
+			nsPlaylist.concat(plItems);
+
+			console.log("Error fetching playlist from native storage: " + error);
+		}
+
+		this.state.playlist = nsPlaylist;
+
+		this._persistList();
+	}
+
+	_persistList = () => {
+		if(this.state.playlist.length > 0) {
+			NativeStorage.persistPlaylist(this.state.playlist);
+		}
 	}
 
 	componentDidMount() {
@@ -112,13 +113,15 @@ export default class PlaylistScreen extends React.Component {
 	}
 
 	_onMusicPlayerLayout = (layout) => {
-		console.log(layout);
+		//console.log(layout);
 		
 		this.setState({bottomMargin: (layout.height + 10)});
 	}
 
 	_onAddItemToPlaylist = (plItem) => {
-		this.setState({playlist: [...this.state.playlist, plItem]});
+		this.setState({playlist: [...this.state.playlist, plItem]}, () => {
+			this._persistList();
+		});
 	}
 	
 	_onPlayPlaylist = (id) => {
@@ -144,7 +147,7 @@ export default class PlaylistScreen extends React.Component {
 
 		console.log(pl);
 
-		this.setState({playlist: pl});
+		this.setState({playlist: pl}, this._persistList);
 	}
 
 	_onActivateRow = (key) => {
@@ -202,3 +205,27 @@ const styles = StyleSheet.create({
 		flex: 1
 	},
 });
+
+/*const PLAYLIST = [
+	new PlaylistItem(
+		'1',
+    	'Comfort Fit - “Sorry”',
+    	'Default',
+		'https://s3.amazonaws.com/exp-us-standard/audio/playlist-example/Comfort_Fit_-_03_-_Sorry.mp3',
+		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
+	),
+	new PlaylistItem(
+		'2',
+    	'Mildred Bailey – “All Of Me”',
+    	'Default',
+		'https://ia800304.us.archive.org/34/items/PaulWhitemanwithMildredBailey/PaulWhitemanwithMildredBailey-AllofMe.mp3',
+		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
+	),
+	new PlaylistItem(
+		'3',
+    	'Podington Bear - “Rubber Robot”',
+    	'Default',
+		'https://s3.amazonaws.com/exp-us-standard/audio/playlist-example/Podington_Bear_-_Rubber_Robot.mp3',
+		'https://pngimage.net/wp-content/uploads/2018/06/main-menu-png-5.png'
+	),
+];*/

@@ -2,7 +2,7 @@ import { AsyncStorage } from "react-native";
 
 export default class NativeStorage {
     static persistPlaylist(playlistAry) {
-        return AsyncStorage.setItem('playlist', playlistAry);
+        return AsyncStorage.setItem('playlist', JSON.stringify(playlistAry));
     }
 
     static getPlaylist() {
@@ -10,7 +10,7 @@ export default class NativeStorage {
     }
 
     static persistUserProfile(userProfile) {
-        return AsyncStorage.setItem('userProfile', userProfile);
+        return AsyncStorage.setItem('userProfile', JSON.stringify(userProfile));
     }
 
     static getUserProfile() {
@@ -18,7 +18,7 @@ export default class NativeStorage {
     }
 
     static persistFeedItems(feedItemAry) {
-        return AsyncStorage.setItem('feed', feedItemAry);
+        return AsyncStorage.setItem('feed', JSON.stringify(feedItemAry));
     }
 
     static getFeedItem() {

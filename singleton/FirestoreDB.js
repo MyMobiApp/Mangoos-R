@@ -304,7 +304,7 @@ export default class FirebaseDBService {
       }
     
       static getPublicFeedItemWithOffset(offset, limit) {
-        
+        //console.log(offset + " - " + limit);
         return new Promise((resolve, reject) => { 
             var feedItemCollection;
             if(offset) {
@@ -326,6 +326,7 @@ export default class FirebaseDBService {
                         list.push({id: docSnapshot.id, data: docSnapshot.data()});
                     });
                 }
+                //console.log(list);
                 resolve(list);
             }).catch(error => {
                 reject(error);
@@ -396,7 +397,7 @@ export default class FirebaseDBService {
       }
     
       static editMusicMetadata(doc_path, album, title) {
-        
+        console.log(doc_path);
         return new Promise((resolve, reject) => { 
           firebase.firestore().doc(doc_path).get().then(docSnapshot => {
             if (docSnapshot.exists)
@@ -440,11 +441,13 @@ export default class FirebaseDBService {
         });
       }
     
-      static deleteMusicMetadataAndFile(doc_path, file_path) {
+      static deleteMusicMetadataAndFile(doc_path) {
     
         return new Promise((resolve, reject) => { 
           firebase.firestore().doc(doc_path).get().then(res => {
             console.log(res);
+            const file_path = res.data().fullPath;
+
             FirebaseStorage.deleteFile(file_path).then(() => {
               console.log("File deleted from storage ");
             }, error => {

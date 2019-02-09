@@ -1,6 +1,6 @@
 import React from 'react';
-import { Alert, TouchableOpacity } from 'react-native';
-import { View, Header, Left, Body, Right, Button, Title } from 'native-base';
+import { Share, Alert, TouchableOpacity } from 'react-native';
+import { Header, Left, Body, Right, Button, Title } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import showPopupMenu from 'react-native-popup-menu-android';
@@ -106,19 +106,31 @@ export class AppHeader extends React.Component {
 
   _onMorePress = () => {
     showPopupMenu(
-        [
-            { id:'share', label:"Share App" }
-        ],
-        this.handleMoreItemSelect,
-        this.moreButton
+      [
+        { id:'share', label:"Share App" }
+      ],
+      this.handleMoreItemSelect,
+      this.moreButton
     );
   }
 
   handleMoreItemSelect = (item) => {
-    alert('Pressed: ' + item.label)
+    if(item.id === 'share') {
+      this._onSharePress();
+    }
   }
 
   _onSharePress = () => {
-    
+    const message = "Hey, I am enjoying *MGooS Social Music Sharing* App. Install it, you will love it.";
+    const subject = "MGoos Social Music Sharing App";
+    const url     = "https://play.google.com/store/apps/details?id=com.mgoos.app&hl=en";
+
+    Share.share({
+      message: `${message} ${url}`, title: subject
+    }).then(() => {
+      console.log("Shared");
+    }).catch(error => {
+      console.log("Error in sharing: " + error);
+    })
   }
 }

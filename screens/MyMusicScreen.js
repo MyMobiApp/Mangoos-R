@@ -30,7 +30,8 @@ export default class MyMusicScreen extends React.Component {
       fetchLimit: 20,
       bFetching: true,
       nSelectCount: 0,
-      selected: new Map()
+      selected: new Map(),
+      refreshing: false
     };
 
     this._loadMyMusic.bind(this);
@@ -47,7 +48,7 @@ export default class MyMusicScreen extends React.Component {
   _renderItem = (item) => {
     return (
       <MyMusicItem 
-        item={item} 
+        item={item}
         onItemPress={this._onThumbnailPress}
         onAddToPlaylist={this._onAddToPlaylist}
         selected={!!this.state.selected.get(item.id)} />
@@ -79,11 +80,14 @@ export default class MyMusicScreen extends React.Component {
       return (
         <Container>
           <AppHeader id={TabID.MYMUSIC} title='MGooS' selectCount={this.state.nSelectCount} selected={this.state.selected}/>
-          <ScrollView style={styles.container}>
-            <View style={{width:'100%'}}>
+            <View style={styles.container}>
               <FlatList
                 data={this.state.musicList}
                 keyExtractor={item => item.id}
+                onRefresh={this._onRefreshList}
+                refreshing={this.state.refreshing}
+                onEndReached={this._onEndReached}
+                onEndReachedThreshold={0.5}
                 renderItem={({ item }) => this._renderItem(item)}
               />
               <ListItem noBorder>
@@ -96,7 +100,6 @@ export default class MyMusicScreen extends React.Component {
                 <Body><Text></Text></Body>
               </ListItem>
             </View>
-          </ScrollView>
           <UploadFAB onInit={this._onUploadInit} onProgress={this._onUploadProgress} onDone={this._onUploadDone} onError={this._onUploadError}/>
         </Container>
       );
@@ -104,7 +107,16 @@ export default class MyMusicScreen extends React.Component {
   }
 
   _onOpenDialog = () => {
-    return
+    return;
+  }
+
+  _onEndReached = () => {
+
+  }
+
+  _onRefreshList = () => {
+    this.setState({refreshing: true});
+    this._loadMyMusic();
   }
 
   _onAddToPlaylist = (item) => {
@@ -178,7 +190,7 @@ export default class MyMusicScreen extends React.Component {
             console.log(item);
           }
 
-          let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt);
+          let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt, `mp3Collection/${handle}/default/${id}`);
 
           musicList.push(plObj.toJSON());
 
@@ -186,7 +198,7 @@ export default class MyMusicScreen extends React.Component {
           //console.log("MP3 URL: " + uri);
 
           if(index == (listLength - 1)) {
-            this.setState({bLoaded: true, musicList: musicList});
+            this.setState({refreshing: false, bLoaded: true, musicList: musicList});
             //console.log(musicList);
           }
         });

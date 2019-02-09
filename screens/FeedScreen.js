@@ -27,11 +27,16 @@ export default class FeedScreen extends React.Component {
   constructor(props) {
     super(props);
 
+    this.timerHandle  = null;
+    this.fetchOffset  = null;
+    this.fetchLimit   = 5;
+
     this.state = {
       feedList: Array(),
-      fetchOffet: null,
-      fetchLimit: 10,
-      bLoaded: false
+      bShowSpinner: true,
+      bLoaded: false,
+      refreshing: false,
+      endReached: false
     }
 
     DataService.InitAddToPlaylistEvent();
@@ -41,33 +46,8 @@ export default class FeedScreen extends React.Component {
     this._loadFeed();
   }
 
-  /*_renderFeed = () => {
-    
-    return this.state.feedList.map((obj, index, ary) => {
-      //console.log(obj);
-
-      return (
-        <FeedItem
-          key = {obj.id}
-          id = {obj.id} 
-          profileHandle={obj.data.profile_handle} 
-          fullName={obj.data.full_name} 
-          profileImg={obj.data.profileImg} 
-          FeedMsg={obj.data.message} 
-          musicURL={obj.data.musicURL} 
-          musicCover={obj.data.musicCover} 
-          musicTitle={obj.data.musicTitle} 
-          musicAlbum={obj.data.musicAlbum} 
-          musicDuration={obj.data.musicDuration}
-          postDateTime={obj.data.post_datetime} 
-          likes={obj.data.likes}
-          onAddToPlaylist={this._onAddToPlaylist}
-        />
-      )
-    });
-  }*/
-
   _renderItem = (item) => {
+    //console.log(item);
     return (
       <FeedItem
         key = {item.id}
@@ -75,7 +55,7 @@ export default class FeedScreen extends React.Component {
         profileHandle={item.data.profile_handle} 
         fullName={item.data.full_name} 
         profileImg={item.data.profileImg} 
-        FeedMsg={item.data.message} 
+        feedMsg={item.data.message} 
         musicURL={item.data.musicURL} 
         musicCover={item.data.musicCover} 
         musicTitle={item.data.musicTitle} 
@@ -89,13 +69,16 @@ export default class FeedScreen extends React.Component {
   }
 
   _renderFlatList = () => {
-    if(this.state.bLoaded) {
+    if(!this.state.bShowSpinner) {
       return (
         <FlatList
           data={this.state.feedList}
           keyExtractor={item => item.id}
-          onEndReachedThreshold={0.2}
+          onEndReachedThreshold={0.5}
           onEndReached={this._onListEndReached}
+          onRefresh={this._onListRefresh}
+          refreshing={this.state.refreshing}
+          progressViewOffset={20}
           renderItem={({ item }) => this._renderItem(item)}
         />
       );
@@ -125,58 +108,65 @@ export default class FeedScreen extends React.Component {
   _loadFeed = (event) => {
     let feedList = this.state.feedList;
 
-    FirebaseDBService.getPublicFeedItemWithOffset(this.state.fetchOffset, this.state.fetchLimit)
+    FirebaseDBService.getPublicFeedItemWithOffset(this.fetchOffset, this.fetchLimit)
         .then(feedItemAry => {
-      const listLength = feedList.length;
+      if(feedItemAry.length > 0) {
+        const listLength = feedList.length;
       
-      feedList = this.state.feedList.concat(feedItemAry);
-      this.setState({fetchOffset: feedItemAry[feedItemAry.length - 1].post_dateobj});
-      
-      if(feedItemAry) {
-        var options = { weekday: "long", year: "numeric", month: "long",   
-            day: "numeric" };
-        feedItemAry.forEach(async (item, index, ary) => {
-          var dateObj = new Date(item.data.post_dateobj);
-          feedList[listLength+index].data.post_datetime = dateObj.toLocaleDateString("en-US", options);
-
-          feedList[listLength+index].data.profileImg = await ImageService.getProfileImage( feedList[listLength+index].data.profile_handle);
-          
-          FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(async obj => {
-            feedList[listLength+index].data.musicAlbum    = obj.album;
-            feedList[listLength+index].data.musicTitle    = obj.title;
-            feedList[listLength+index].data.musicDuration = obj.duration;
-            feedList[listLength+index].data.musicCover    = await FirebaseStorage.getDownloadURL(obj.pictureURL);
-            feedList[listLength+index].data.musicURL      = await FirebaseStorage.getDownloadURL(obj.storagePath);
-
-            if(index == (feedItemAry.length - 1)) {
-              this.setState({bLoaded: true, feedList: feedList});
-  
-              //console.log("Complete Array");
-              //console.log(feedList);
-            }
-          }).catch(error => {
-            console.log("getMusicData Error: " + error);
-          });
-        })
+        feedList = this.state.feedList.concat(feedItemAry);
+        this.fetchOffset = feedItemAry[feedItemAry.length - 1].data.post_dateobj;
         
-      }
-      
-      //console.log("Fetched Array");
-      //console.log(feedItemAry);
-      //console.log("Complete Array");
-      //console.log(this.state.feedList);
+        if(feedItemAry) {
+          var options = { weekday: "long", year: "numeric", month: "long",   
+              day: "numeric" };
+          feedItemAry.forEach(async (item, index, ary) => {
+            var dateObj = new Date(item.data.post_dateobj);
+            feedList[listLength+index].data.post_datetime = dateObj.toLocaleDateString("en-US", options);
 
-      if(event) {
-        event.target.complete();
-        if(feedItemAry.length == 0) {
-          event.target.disabled = true;
+            feedList[listLength+index].data.profileImg = await ImageService.getProfileImage( feedList[listLength+index].data.profile_handle);
+            
+            FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(async obj => {
+              feedList[listLength+index].data.musicAlbum    = obj.album;
+              feedList[listLength+index].data.musicTitle    = obj.title;
+              feedList[listLength+index].data.musicDuration = obj.duration;
+              
+              try{
+                feedList[listLength+index].data.musicCover    = await FirebaseStorage.getDownloadURL(obj.pictureURL);
+              }
+              catch(error) {
+                feedList[listLength+index].data.musicCover = null;
+                
+                //console.log("getMusicData musicCover Error: ");
+                //console.log(error);
+              }
+
+              try{
+                feedList[listLength+index].data.musicURL      = await FirebaseStorage.getDownloadURL(obj.storagePath);
+              }
+              catch(error) {
+                feedList[listLength+index].data.musicURL = null;
+
+                //console.log("getMusicData musicURL Error: ");
+                //console.log(error);
+              }
+
+              if(index == (feedItemAry.length - 1)) {
+                this.setState({bLoaded: true, bShowSpinner: false, refreshing: false, feedList: feedList});
+    
+                //console.log("Complete Array");
+                //console.log(feedList);
+              }
+            }).catch(error => {
+              console.log("getMusicData Error: ");
+              console.log(error);
+            });
+          })
         }
+      } 
+      else {
+        this.setState({endReached: true});
       }
     });
-  }
-
-  _onListEndReached = (distanceFromEnd) => {
-    console.log(distanceFromEnd);
   }
 
   _onAddToPlaylist = (item) => {
@@ -184,6 +174,27 @@ export default class FeedScreen extends React.Component {
 
     ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
       ToastAndroid.SHORT, ToastAndroid.CENTER);
+  }
+
+  _onListEndReached = (distanceFromEnd) => {
+    this.timerHandle = setInterval(() => {
+      if(this.state.bLoaded && !this.state.endReached) {
+        this.setState({bLoaded: false});
+        this._loadFeed(null);
+
+        clearInterval(this.timerHandle);
+      }
+      else if(this.state.endReached) {
+        clearInterval(this.timerHandle);
+      }
+    }, 1000);
+
+    //console.log(distanceFromEnd);
+  }
+
+  _onListRefresh = () => {
+    this.setState({feedList: Array(), refreshing: true});
+    this._loadFeed(null);
   }
 
   _maybeRenderDevelopmentModeWarning() {
@@ -308,3 +319,30 @@ const styles = StyleSheet.create({
     color: '#2e78b7',
   },
 });
+
+
+ /*_renderFeed = () => {
+    
+    return this.state.feedList.map((obj, index, ary) => {
+      //console.log(obj);
+
+      return (
+        <FeedItem
+          key = {obj.id}
+          id = {obj.id} 
+          profileHandle={obj.data.profile_handle} 
+          fullName={obj.data.full_name} 
+          profileImg={obj.data.profileImg} 
+          FeedMsg={obj.data.message} 
+          musicURL={obj.data.musicURL} 
+          musicCover={obj.data.musicCover} 
+          musicTitle={obj.data.musicTitle} 
+          musicAlbum={obj.data.musicAlbum} 
+          musicDuration={obj.data.musicDuration}
+          postDateTime={obj.data.post_datetime} 
+          likes={obj.data.likes}
+          onAddToPlaylist={this._onAddToPlaylist}
+        />
+      )
+    });
+  }*/

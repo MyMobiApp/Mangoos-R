@@ -1,10 +1,11 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { Alert, ToastAndroid, TouchableOpacity } from 'react-native';
 import { ListItem, View, Right, Text, Left, Thumbnail, Body, Button } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
 
 import showPopupMenu from 'react-native-popup-menu-android';
+import FirebaseDBService from '../singleton/FirestoreDB';
 
 
 export class MyMusicItem extends React.Component {
@@ -15,6 +16,9 @@ export class MyMusicItem extends React.Component {
   constructor(props) {
     super(props);
     
+    this.albumName = props.item.album;
+    this.titleName = props.item.title;
+
     this.state = {
         bSelected: false,
         bDialogVisible: false
@@ -33,8 +37,14 @@ export class MyMusicItem extends React.Component {
         <View>
             <Dialog.Container visible={this.state.bDialogVisible}>
               <Dialog.Title>Edit Music Info</Dialog.Title>
-              <Dialog.Input value={this.props.item.title}/>
-              <Dialog.Input value={this.props.item.album}/>
+              <Dialog.Input label={'Title'} 
+                defaultValue={this.props.item.title}
+                onChangeText={this._onTitleChangeText}
+                style={{borderWidth:1, borderColor:'silver'}}/>
+              <Dialog.Input label={'Album'} 
+                defaultValue={this.props.item.album} 
+                onChangeText={this._onAlbumChangeText}
+                style={{borderWidth:1, borderColor:'silver'}}/>
               <Dialog.Button label="Cancel" onPress={this._handleDialogCancel}/>
               <Dialog.Button label="Submit" onPress={this._handleDialogSubmit}/>
             </Dialog.Container>
@@ -74,11 +84,29 @@ export class MyMusicItem extends React.Component {
     this.props.onAddToPlaylist(this.props.item);
   }
 
+  _onAlbumChangeText = (text) => {
+    //this.albumName = text;
+  }
+
+  _onTitleChangeText = (text) => {
+    //this.titleName = text;
+  }
+
   _handleDialogCancel = () => {
     this.setState({bDialogVisible: false});
   }
 
   _handleDialogSubmit = () => {
+    FirebaseDBService.editMusicMetadata(this.props.item.dbPath, 
+        this.albumName, this.titleName).then(() => {
+          console.log("Edit successful");
+
+          ToastAndroid.showWithGravity(`${this.titleName} edited successfully!`, 
+            ToastAndroid.SHORT, ToastAndroid.CENTER);
+        }).catch(error => {
+            console.log(error);
+        });
+
     this.setState({bDialogVisible: false});
   }
 
@@ -98,7 +126,30 @@ export class MyMusicItem extends React.Component {
         this.setState({bDialogVisible: true});
     }
     else if(item.id === 'delete') {
-        alert("Delete Pressed");
+        Alert.alert(
+            'Delete ...',
+            `Are you sure to delete '${this.props.item.title}'?`,
+            [
+              {
+                text: 'No',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+              },
+              {
+                text: 'Yes', 
+                onPress: () => {
+                    FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
+                        .then(() => {
+                            ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
+                                ToastAndroid.SHORT, ToastAndroid.CENTER);
+                        }).catch(error => {
+                            ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
+                        });
+                }
+              },
+            ],
+            {cancelable: false},
+          );
     }
     //alert('Pressed: ' + item.label);
   }

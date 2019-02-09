@@ -5,6 +5,41 @@ import { Entypo } from '@expo/vector-icons';
 import { PlaylistItem } from './MusicPlayer';
 //import { Image } from "react-native-expo-image-cache";
 
+export class StorageFeedItem {
+  constructor(id, profileHandle, fullName, profileImg, feedMsg, musicURL, 
+    musicCover, musicTitle, musicAlbum, musicDuration, postDateTime, likes) {
+    this.id             = id;
+    this.profileHandle  = profileHandle;
+    this.profileName    = fullName;
+    this.profileImg     = profileImg;
+    this.feedMsg        = feedMsg;
+    this.musicURL       = musicURL;
+    this.musicCover     = musicCover;
+    this.musicTitle     = musicTitle;
+    this.musicAlbum     = musicAlbum;
+    this.musicDuration  = musicDuration;
+    this.postDateTime   = postDateTime;
+    this.likes          = likes;
+  }
+
+  toJSON() {
+    return {
+      id:             this.id,
+      profileHandle:  this.profileHandle,
+      profileName:    this.fullName,
+      profileImg:     this.profileImg,
+      feedMsg:        this.feedMsg,
+      musicURL:       this.musicURL,
+      musicCover:     this.musicCover,
+      musicTitle:     this.musicTitle,
+      musicAlbum:     this.musicAlbum,
+      musicDuration:  this.musicDuration,
+      postDateTime:   this.postDateTime,
+      likes:          this.likes,
+    }
+  }
+}
+
 export class FeedItem extends React.Component {
 
   constructor(props) {
@@ -15,14 +50,14 @@ export class FeedItem extends React.Component {
       profileHandle:  props.profileHandle,
       profileName:    props.fullName,
       profileImg:     props.profileImg,
-      feedMsg:        props.FeedMsg,
+      feedMsg:        props.feedMsg,
       musicURL:       props.musicURL,
       musicCover:     props.musicCover,
       musicTitle:     props.musicTitle,
       musicAlbum:     props.musicAlbum,
       musicDuration:  props.musicDuration,
       postDateTime:   props.postDateTime,
-      likes:          props.like,
+      likes:          props.likes,
     }
   }
 
@@ -51,9 +86,9 @@ export class FeedItem extends React.Component {
   shouldComponentUpdate(nextProps) {
     return (this.state.profileImg !== nextProps.profileImg || 
             this.state.musicURL !== nextProps.musicURL || 
-            this.state.musicCover !== newProps.musicCover ||
-            this.state.musicTitle !== newProps.musicTitle ||
-            this.state.musicAlbum !== newProps.musicAlbum);
+            this.state.musicCover !== nextProps.musicCover ||
+            this.state.musicTitle !== nextProps.musicTitle ||
+            this.state.musicAlbum !== nextProps.musicAlbum);
   }
 
   render() {

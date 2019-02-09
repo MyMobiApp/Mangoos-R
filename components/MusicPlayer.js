@@ -13,7 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Grid, Col } from 'native-base';
 
 export class PlaylistItem {
-	constructor(id, title, album, uri, coverImage, duration, createdAt) {
+	constructor(id, title, album, uri, coverImage, duration, createdAt, dbPath) {
         this.id             = id;
         this.title          = title;
         this.album          = album;
@@ -21,6 +21,7 @@ export class PlaylistItem {
         this.coverImage     = coverImage;
         this.duration       = duration;
         this.createdAt      = createdAt;
+        this.dbPath         = dbPath;
     }
     
     toJSON() {
@@ -31,7 +32,8 @@ export class PlaylistItem {
             uri: this.uri,
             coverImage: this.coverImage,
             duration: this.duration,
-            createdAt: this.createdAt
+            createdAt: this.createdAt,
+            dbPath: this.dbPath
         }
     }
 }
@@ -100,7 +102,7 @@ export class MusicPlayer extends React.Component {
     console.log(this.props.playlist.length + " - " + newProps.playlist.length);
     if(this.props.playlist.length == 0 && newProps.playlist.length > 0) {
         this.index = newProps.curIndex;
-        
+
         this._updateScreenForLoading(true, "Checking next item in playlist...");
 
         this._loadNewPlaybackInstance(false, null, newProps);

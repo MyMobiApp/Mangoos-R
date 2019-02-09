@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { NetInfo, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
 //import { MenuProvider } from 'react-native-popup-menu';
 
@@ -16,6 +16,7 @@ import './issues/setTimeoutIssue';
 export default class App extends React.Component {
   state = {
     isLoadingComplete: false,
+    isConnected: true,
   };
 
   constructor(props) {
@@ -24,9 +25,18 @@ export default class App extends React.Component {
     FirebaseDBService.init();
   }
 
-  closeDrawer = () => {
-    this.drawer._root.close();
-  };
+  componentWillMount() {
+    NetInfo.addEventListener('connectionChange', this._handleConnectivityChange);
+  }
+
+  _handleConnectivityChange = (connectionInfo) => {
+    if(connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+      this.setState({isConnected: true});
+    }
+    else {
+      this.setState({isConnected: false});
+    }
+  }
 
   render() {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
