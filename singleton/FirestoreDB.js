@@ -1,3 +1,4 @@
+import { NetInfo } from 'react-native';
 import FirebaseStorage from './FirebaseStorage';
 
 import atob from 'atob';
@@ -42,7 +43,6 @@ export class FeedItem {
 }
 
 export default class FirebaseDBService {
-    
     static init() {
         firebase.initializeApp(environment.firebase);
     }
@@ -210,64 +210,40 @@ export default class FirebaseDBService {
         });
       }
     
-      static getMusicMetaInfoList(handle, album, offset, limit) {
+      static getMusicFileList(handle, album, offset, limit) {
         
         return new Promise((resolve, reject) => { 
-            let mp3Collection;
-            const collectionPath = `mp3Collection/${handle}/${album}`;
+          let musicCollection;
+          
+          if(offset) {
+            musicCollection = firebase.firestore().collection('mp3Collection').doc(handle).collection(album)
+            .orderBy('createdAt', 'desc')
+            .startAfter(offset)
+            .limit(limit);
+          } else {
+            musicCollection = firebase.firestore().collection('mp3Collection').doc(handle).collection(album)
+            .orderBy('createdAt', 'desc')
+            .limit(limit);
+          }
 
-            if(offset) {
-                mp3Collection = firebase.firestore().collection(collectionPath)
-                //.doc(handle).collection(album)
-                .orderBy('createdAt', 'desc')
-                .startAfter(offset)
-                .limit(limit);
+          musicCollection.get().then(res => {
+            //alert(res.size);
+            if (res.size > 0)
+            {
+              let dataAry = Array();
+              res.forEach(action => {
+                dataAry.push({id: action.id, data: action.data()});
+                //alert(doc.id + " => " + JSON.stringify(doc.data()));
+                // doc.data() is never undefined for query doc snapshots
+              });
+              resolve(dataAry);
             }
             else {
-                mp3Collection = firebase.firestore().collection(collectionPath)
-                //.doc(handle).collection(album);
-                .orderBy('createdAt', 'desc')
-                .limit(limit);
+              resolve(Array());
             }
-
-            console.log("querying getMusicMetaInfoList.... - " + handle + " - " + album + " - " + offset + " - " + limit);
-            mp3Collection.get().then(querySnapshot => {
-              console.log("Got snapshot...");
-              let list = Array();
-
-              querySnapshot.forEach(docSnapshot => {
-                console.log(docSnapshot);
-                list.push({id: docSnapshot.id, data: docSnapshot.data()});
-              });
-
-                resolve(list);
-            }).catch(error => {
-              console.log(error);
-              reject(error);
-            });
-        });
-      }
-    
-      static getMusicFileList(handle, album) {
-        
-        return new Promise((resolve, reject) => { 
-          firebase.firestore().collection('mp3Collection').doc(handle).collection(album)
-            .get().then(res => {
-              //alert(res.size);
-              if (res.size > 0)
-              {
-                let dataAry = Array();
-                res.forEach(action => {
-                  dataAry.push({id: action.id, data: action.data()});
-                  //alert(doc.id + " => " + JSON.stringify(doc.data()));
-                  // doc.data() is never undefined for query doc snapshots
-                });
-                resolve(dataAry);
-              }
-              else {
-                reject("You haven't uploaded any music file yet!");
-              }
-            });
+          }).catch(error => {
+            reject(error);
+          });
         });
       }
     

@@ -50,7 +50,7 @@ export class UploadProgress extends React.Component {
                   />
                 </View>
                 <View style={styles.progressBadge}>
-                  <Badge success style={styles.height90}>
+                  <Badge success>
                     <Text style={styles.progressText}>
                       {this.state.progress * 100}%
                     </Text>
@@ -94,7 +94,7 @@ export class UploadProgress extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-evenly',
+    /*justifyContent: 'space-evenly',*/
     padding: 10,
   },
   width100: {
@@ -108,17 +108,17 @@ const styles = StyleSheet.create({
   },
   progressBadge: {
     paddingLeft: 5, 
-    top: -4
+    top: -5,
+    height: '90%',
   },
   fileName: {
     color: '#ff0000'
   },
   progressBar: {
-    flex: 2,
+    /*flex: 1,*/
     flexDirection: 'row'
   },
   progressText: {
-    fontSize: 12, 
-    top:-2
+    fontSize: 12,
   }
 });

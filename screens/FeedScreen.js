@@ -6,6 +6,7 @@ import {
   Text,
   View,
   FlatList,
+  RefreshControl,
   ToastAndroid
 } from 'react-native';
 import { WebBrowser } from 'expo';
@@ -15,7 +16,6 @@ import { AppHeader, TabID } from '../components/AppHeader';
 import { FeedItem } from '../components/FeedItem';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import ImageService from '../singleton/ImageService';
-import FirebaseStorage from '../singleton/FirebaseStorage';
 import DataService from '../singleton/Data';
 
 
@@ -76,8 +76,8 @@ export default class FeedScreen extends React.Component {
           keyExtractor={item => item.id}
           onEndReachedThreshold={0.5}
           onEndReached={this._onListEndReached}
-          onRefresh={this._onListRefresh}
-          refreshing={this.state.refreshing}
+          /*onRefresh={this._onListRefresh}
+          refreshing={this.state.refreshing}*/
           progressViewOffset={20}
           renderItem={({ item }) => this._renderItem(item)}
         />
@@ -94,7 +94,8 @@ export default class FeedScreen extends React.Component {
     return (
       <View style={styles.container}>
         <AppHeader id={TabID.FEED} title='MGooS'/>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <ScrollView refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onListRefresh} />}
+          style={styles.container} contentContainerStyle={styles.contentContainer}>
           <View>
             {
               this._renderFlatList()
@@ -125,13 +126,15 @@ export default class FeedScreen extends React.Component {
 
             feedList[listLength+index].data.profileImg = await ImageService.getProfileImage( feedList[listLength+index].data.profile_handle);
             
-            FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(async obj => {
+            FirebaseDBService.getMusicData(feedList[listLength+index].data.db_path).then(obj => {
               feedList[listLength+index].data.musicAlbum    = obj.album;
               feedList[listLength+index].data.musicTitle    = obj.title;
               feedList[listLength+index].data.musicDuration = obj.duration;
 
-              feedList[listLength+index].data.musicCover    = DataService.getFirebaseStorageReadURL(obj.pictureURL);//await FirebaseStorage.getDownloadURL(obj.pictureURL);
-              feedList[listLength+index].data.musicURL      = DataService.getFirebaseStorageReadURL(obj.storagePath);//await FirebaseStorage.getDownloadURL(obj.storagePath);
+              feedList[listLength+index].data.musicCover    = obj.pictureURL? DataService.getFirebaseStorageReadURL(obj.pictureURL) : null;
+              //await FirebaseStorage.getDownloadURL(obj.pictureURL);
+              feedList[listLength+index].data.musicURL      = DataService.getFirebaseStorageReadURL(obj.storagePath);
+              //await FirebaseStorage.getDownloadURL(obj.storagePath);
               
               if(index == (feedItemAry.length - 1)) {
                 this.setState({bLoaded: true, bShowSpinner: false, refreshing: false, feedList: feedList});
@@ -176,8 +179,12 @@ export default class FeedScreen extends React.Component {
   }
 
   _onListRefresh = () => {
-    this.setState({feedList: Array(), refreshing: true});
-    this._loadFeed(null);
+    this.timerHandle  = null;
+    this.fetchOffset  = null;
+
+    this.setState({feedList: Array(), refreshing: true, endReached: false}, () => {
+      this._loadFeed(null);
+    });
   }
 
   _maybeRenderDevelopmentModeWarning() {

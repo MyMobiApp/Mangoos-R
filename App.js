@@ -8,7 +8,7 @@ import { Drawer } from 'native-base';
 import Login from './navigation/Login';
 
 import FirebaseDBService from './singleton/FirestoreDB';
-import { UserProfile } from './menu/UserProfile';
+//import { UserProfile } from './menu/UserProfile';
 
 import './issues/setTimeoutIssue';
 

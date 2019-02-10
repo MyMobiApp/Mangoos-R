@@ -106,7 +106,8 @@ export class FeedItem extends React.Component {
         <CardItem bordered>
           <Body>
             {/* {...{uri: this.state.musicCover}} */}
-            <Image source={{uri: this.state.musicCover}} style={{resizeMode: 'contain', height: 200, width: (Dimensions.get('window').width - 50), flex: 1}}/>
+            <Image source={this.state.musicCover ? {uri: this.state.musicCover} : require('../assets/images/default_cover.jpg')} 
+              style={{resizeMode: 'contain', height: 200, width: (Dimensions.get('window').width - 50), flex: 1}}/>
             <View style={{marginTop: 5, alignItems: 'center', width:'100%'}}>
               <Text>{this.state.musicTitle}</Text>
               <Text note>{this.state.musicAlbum}</Text>

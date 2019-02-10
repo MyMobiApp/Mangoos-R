@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet, Button, View, Text, Platform } from 'react-native';
-import { Container, Header, Icon, Fab, Spinner } from 'native-base';
+import { Image, StyleSheet, View, Text, Platform } from 'react-native';
+import { Button, Spinner, Icon } from 'native-base';
 import { AuthSession, Facebook } from 'expo';
 import AppNavigator from './AppNavigator';
 
@@ -25,8 +25,9 @@ export default class LoginScreen extends React.Component {
 
     this.state = {
       loggedIn: false,
-      authenticating: true,
-      userInfo: null
+      authenticatingFirebase: true,
+      userInfo: null,
+      authenticationFB: false
     }
   }
 
@@ -40,13 +41,25 @@ export default class LoginScreen extends React.Component {
       );
     }
     else {
-      if(this.state.authenticating) {
+      if(this.state.authenticatingFirebase) {
         return this._authFromFirebase();
+      }
+      else if(this.state.authenticationFB) {
+        return (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Spinner />
+          </View>
+        );
       }
       else {
         return (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Button title="Open FB Auth" onPress={this._handlePressAsync} />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+            <Image source={require('../assets/images/mgoos_logo_ori.gif')} 
+              style={{width:162, height:50, marginBottom:50, top:-20}} />
+            <Button primary block onPress={this._handlePressAsync} style={{margin:10}}> 
+              <Text style={{color:'white'}}>Login with Facebook</Text>
+              <Icon name='logo-facebook'></Icon>
+            </Button>
           </View>
         );
       }
@@ -63,16 +76,16 @@ export default class LoginScreen extends React.Component {
           data.picture_url = user.photoURL+'?height=200';
           DataService.saveProfileData(data);
 
-          this.setState({ loggedIn: true, authenticating: false, userInfo: data });
+          this.setState({ loggedIn: true, authenticatingFirebase: false, userInfo: data });
         });
         // User is signed in.
       }
       else {
-        this.setState({ loggedIn: false, authenticating: false, userInfo: null });
+        this.setState({ loggedIn: false, authenticatingFirebase: false, userInfo: null });
       }
     }, error => {
       console.log("onAuthStateChanged Error : ", error);
-      this.setState({ loggedIn: false, authenticating: false, userInfo: null });
+      this.setState({ loggedIn: false, authenticatingFirebase: false, userInfo: null });
     });
 
     return (
@@ -96,6 +109,8 @@ export default class LoginScreen extends React.Component {
   };
 
   _handlePressAsync = async () => {
+    this.setState({authenticationFB: true});
+
     let redirectUrl = AuthSession.getRedirectUrl();
     //alert(redirectUrl);
     // You need to add this url to your authorized redirect urls on your Facebook app
@@ -149,16 +164,24 @@ export default class LoginScreen extends React.Component {
     const facebookCredential = firebase.auth.FacebookAuthProvider
     .credential(accessToken);
 
-    firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential)
+    try {
+      await firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential);
+    }
+    catch(error) {
+      console.log("Firebase failed: "); 
+      console.log(error)
+    }
+    /*firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential)
     .then( success => { 
+      
       console.log("Firebase success: " + JSON.stringify(success)); 
     }).catch(error => {
-      console.log("Firebase failed: " + error); 
-    });
+      
+    });*/
 
     DataService.setProfileData(userData);
     console.log('Logged into Facebook!', userData);
-    this.setState({ loggedIn: true, authenticating: false, userInfo: userData });
+    this.setState({ loggedIn: true, authenticationFB: false, authenticatingFirebase: false, userInfo: userData });
   };
 }
 

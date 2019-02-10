@@ -1,5 +1,11 @@
 import React from 'react';
-import { ToastAndroid, ScrollView, StyleSheet, FlatList } from 'react-native';
+import { 
+  RefreshControl,
+  ToastAndroid, 
+  ScrollView, 
+  StyleSheet, 
+  FlatList 
+} from 'react-native';
 import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
 
 import { UploadFAB } from '../components/UploadFAB';
@@ -8,7 +14,6 @@ import { AppHeader, TabID } from '../components/AppHeader';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
-import FirebaseStorage from '../singleton/FirebaseStorage';
 import { MyMusicItem } from '../components/MyMusicItem';
 
 export default class MyMusicScreen extends React.Component {
@@ -19,15 +24,19 @@ export default class MyMusicScreen extends React.Component {
   constructor(props) {
     super(props);
 
+    this.fetchOffset  = null;
+    this.fetchLimit   = 10;
+    this.timerHandle  = null;
+
     this.state = {
       bUploading: false,
       bLoaded: false,
+      endReached: false,
+      bShowSpinner: true,
       uploadProgress: 0,
       uploadFileName: "pallo latke.mp3",
       downloadURL: "",
       musicList: Array(),
-      fetchOffset: null,
-      fetchLimit: 20,
       bFetching: true,
       nSelectCount: 0,
       selected: new Map(),
@@ -61,13 +70,14 @@ export default class MyMusicScreen extends React.Component {
       return (
         <Container>
           <AppHeader id={TabID.MYMUSIC} title='Uploading ...'/>
-          <View style={styles.container}>
-            <UploadProgress progress={this.state.uploadProgress} fileName={this.state.uploadFileName} onIgnore={this._onIgnorePost}></UploadProgress>
-          </View>
+          <UploadProgress 
+            progress={this.state.uploadProgress} 
+            fileName={this.state.uploadFileName} 
+            onIgnore={this._onIgnorePost} />
         </Container>
       );
     }
-    else if(!this.state.bLoaded) {
+    else if(this.state.bShowSpinner) {
       return (
         <Container>
           <AppHeader id={TabID.MYMUSIC} title='MGooS'/>
@@ -80,85 +90,51 @@ export default class MyMusicScreen extends React.Component {
       return (
         <Container>
           <AppHeader id={TabID.MYMUSIC} title='MGooS' selectCount={this.state.nSelectCount} selected={this.state.selected}/>
-            <View style={styles.container}>
-              <FlatList
-                data={this.state.musicList}
-                keyExtractor={item => item.id}
-                onRefresh={this._onRefreshList}
-                refreshing={this.state.refreshing}
-                onEndReached={this._onEndReached}
-                onEndReachedThreshold={0.5}
-                renderItem={({ item }) => this._renderItem(item)}
-              />
-              <ListItem noBorder>
-                <Body><Text></Text></Body>
-              </ListItem>
-              <ListItem noBorder>
-                <Body><Text></Text></Body>
-              </ListItem>
-              <ListItem noBorder>
-                <Body><Text></Text></Body>
-              </ListItem>
-            </View>
+            <ScrollView refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefreshList}/>} >
+              <View style={styles.container}>
+                <FlatList
+                  data={this.state.musicList}
+                  keyExtractor={item => item.id}
+                  /*onRefresh={this._onRefreshList}
+                  refreshing={this.state.refreshing}*/
+                  onEndReached={this._onEndReached}
+                  onEndReachedThreshold={0.5}
+                  renderItem={({ item }) => this._renderItem(item)}
+                />
+                <ListItem noBorder>
+                  <Body><Text></Text></Body>
+                </ListItem>
+                <ListItem noBorder>
+                  <Body><Text></Text></Body>
+                </ListItem>
+                <ListItem noBorder>
+                  <Body><Text></Text></Body>
+                </ListItem>
+              </View>
+            </ScrollView>
           <UploadFAB onInit={this._onUploadInit} onProgress={this._onUploadProgress} onDone={this._onUploadDone} onError={this._onUploadError}/>
         </Container>
       );
     }
   }
 
-  _onOpenDialog = () => {
-    return;
-  }
-
-  _onEndReached = () => {
-
-  }
-
-  _onRefreshList = () => {
-    this.setState({refreshing: true});
-    this._loadMyMusic();
-  }
-
-  _onAddToPlaylist = (item) => {
-    DataService.AddToPlaylist(item);
-
-    ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
-      ToastAndroid.SHORT, ToastAndroid.CENTER);
-  }
-
-  _onThumbnailPress = (id) => {
-    //console.log(item);
-    
-    this.setState((state) => {
-      // copy the map rather than modifying state.
-      const selected = new Map(state.selected);
-      const val = !selected.get(id);
-      selected.set(id, val); // toggle
-
-      nSelectCount = val ? (state.nSelectCount + 1) : (state.nSelectCount - 1);
-
-      return {selected, nSelectCount};
-    });
-  }
-
   _loadMyMusic = () => {
     let handle = DataService.getProfileData().handle;
     let musicList = Array();
     
-    FirebaseDBService.getMusicFileList(handle, 'default')//, this.state.fetchOffset, this.state.fetchLimit)
+    FirebaseDBService.getMusicFileList(handle, 'default', this.fetchOffset, this.fetchLimit)
     .then(list => {
       //console.log(list);
       if(list.length > 0) {
         const listLength = list.length;
         //const listLength = this.state.musicList ? this.state.musicList.length : 0;
 
-        this.state.fetchOffset = list[listLength - 1].data.createdAt;
+        this.fetchOffset = list[listLength - 1].data.createdAt;
         //musicList = this.state.musicList.concat(list);
 
-        //_me_.mp3List.sort(_me_.compare);
         //console.log(this.state.musicList);
 
-        list.forEach(async (item, index, ary) => {
+        list.forEach((item, index, ary) => {
           const id    = item.id;
           const title = (item.data.hasOwnProperty('metaData') && 
                          item.data.metaData.hasOwnProperty('common') && 
@@ -182,21 +158,69 @@ export default class MyMusicScreen extends React.Component {
           let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt, `mp3Collection/${handle}/default/${id}`);
 
           musicList.push(plObj.toJSON());
-
-          //console.log("CoverImg: " + coverImage);
-          //console.log("MP3 URL: " + uri);
-
+          
           if(index == (listLength - 1)) {
-            this.setState({refreshing: false, bLoaded: true, musicList: musicList});
-            //console.log(musicList);
+            const finalList = this.state.musicList.concat(musicList);
+
+            this.setState({refreshing: false, bShowSpinner: false, bLoaded: true, musicList: finalList});
           }
         });
       }
+      else {
+        this.setState({endReached: true});
+      }
     }).catch(error => {
-      console.log("Error getMusicMetaInfoList");
+      console.log("Error getMusicFileList");
       console.log(error);
     });
     //return ();
+  }
+
+  _onEndReached = (info) => {
+    this.timerHandle = setInterval(() => {
+      if(this.state.bLoaded && !this.state.endReached) {
+        this.setState({bLoaded: false});
+        this._loadMyMusic();
+
+        clearInterval(this.timerHandle);
+      }
+      else if(this.state.endReached) {
+        clearInterval(this.timerHandle);
+      }
+    }, 1000);
+
+    //console.log(info);
+  }
+
+  _onRefreshList = () => {
+    this.timerHandle  = null;
+    this.fetchOffset  = null;
+
+    this.setState({musicList: Array(), refreshing: true, endReached: false}, () => {
+      this._loadMyMusic();
+    });
+  }
+
+  _onAddToPlaylist = (item) => {
+    DataService.AddToPlaylist(item);
+
+    ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
+      ToastAndroid.SHORT, ToastAndroid.CENTER);
+  }
+
+  _onThumbnailPress = (id) => {
+    //console.log(item);
+    
+    this.setState((state) => {
+      // copy the map rather than modifying state.
+      const selected = new Map(state.selected);
+      const val = !selected.get(id);
+      selected.set(id, val); // toggle
+
+      nSelectCount = val ? (state.nSelectCount + 1) : (state.nSelectCount - 1);
+
+      return {selected, nSelectCount};
+    });
   }
 
   _onUploadInit = (fileName) => {

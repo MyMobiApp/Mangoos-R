@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, ToastAndroid, TouchableOpacity } from 'react-native';
-import { ListItem, View, Right, Text, Left, Thumbnail, Body, Button } from 'native-base';
+import { Spinner, ListItem, View, Right, Text, Left, Thumbnail, Body, Button } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
 
@@ -21,7 +21,10 @@ export class MyMusicItem extends React.Component {
 
     this.state = {
         bSelected: false,
-        bDialogVisible: false
+        bDialogVisible: false,
+        bUpdatingAlbumTitle: false,
+        album: props.item.album,
+        title: props.item.title
     }
   }
 
@@ -32,17 +35,34 @@ export class MyMusicItem extends React.Component {
     this.props.onItemPress(id);
   }
 
+  _renderMusicInfo = () => {
+      if(this.state.bUpdatingAlbumTitle) {
+        return (
+            <Spinner color='red' />
+        );
+      }
+      else {
+        return (
+            <TouchableOpacity onPress={() => this._onItemPress(this.props.item.id)}>
+                <Text>{this.state.title}</Text>
+                <Text note>{this.state.album}</Text>
+                <Text style={{color:'blue', fontSize:10}}>{this.props.item.createdAt}</Text>
+            </TouchableOpacity>
+        );
+      }
+  }
+
   render() {
     return (
         <View>
             <Dialog.Container visible={this.state.bDialogVisible}>
               <Dialog.Title>Edit Music Info</Dialog.Title>
               <Dialog.Input label={'Title'} 
-                defaultValue={this.props.item.title}
+                defaultValue={this.state.title}
                 onChangeText={this._onTitleChangeText}
                 style={{borderWidth:1, borderColor:'silver'}}/>
               <Dialog.Input label={'Album'} 
-                defaultValue={this.props.item.album} 
+                defaultValue={this.state.album} 
                 onChangeText={this._onAlbumChangeText}
                 style={{borderWidth:1, borderColor:'silver'}}/>
               <Dialog.Button label="Cancel" onPress={this._handleDialogCancel}/>
@@ -58,11 +78,7 @@ export class MyMusicItem extends React.Component {
                 </TouchableOpacity>
                 </Left>
                 <Body>
-                <TouchableOpacity onPress={() => this._onItemPress(this.props.item.id)}>
-                    <Text>{this.props.item.title}</Text>
-                    <Text note>{this.props.item.album}</Text>
-                    <Text style={{color:'blue', fontSize:10}}>{this.props.item.createdAt}</Text>
-                </TouchableOpacity>
+                    {this._renderMusicInfo()}
                 </Body>
                 <Right>
                 <View style={{flexDirection: "row"}}>
@@ -85,11 +101,11 @@ export class MyMusicItem extends React.Component {
   }
 
   _onAlbumChangeText = (text) => {
-    //this.albumName = text;
+    this.albumName = text;
   }
 
   _onTitleChangeText = (text) => {
-    //this.titleName = text;
+    this.titleName = text;
   }
 
   _handleDialogCancel = () => {
@@ -97,14 +113,17 @@ export class MyMusicItem extends React.Component {
   }
 
   _handleDialogSubmit = () => {
+    //console.log("Updating with: " + this.albumName + " - " + this.titleName);
+    this.setState({bUpdatingAlbumTitle: true});
     FirebaseDBService.editMusicMetadata(this.props.item.dbPath, 
         this.albumName, this.titleName).then(() => {
-          console.log("Edit successful");
+          this.setState({album: this.albumName, title: this.titleName, bUpdatingAlbumTitle: false});
 
           ToastAndroid.showWithGravity(`${this.titleName} edited successfully!`, 
             ToastAndroid.SHORT, ToastAndroid.CENTER);
         }).catch(error => {
             console.log(error);
+            this.setState({bUpdatingAlbumTitle: false});
         });
 
     this.setState({bDialogVisible: false});
