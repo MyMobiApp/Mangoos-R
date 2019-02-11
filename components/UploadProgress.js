@@ -30,13 +30,21 @@ export class UploadProgress extends React.Component {
     return this.state.progress !== nextProps.progress || this.state.fileName !== nextProps.fileName;
   }
 
+  _renderUploadFileName = (maxLength) => {
+    let renderName = ((`${this.state.fileName}`).length > maxLength) ? 
+    (((`${this.state.fileName}`).substring(0,maxLength-3)) + '...') : 
+    `${this.state.fileName}`;
+
+    return renderName;
+  }
+
   render() {
     return (
       <View style={styles.container}>
         <Card>
           <CardItem header bordered>
             <Text>Uploading </Text>
-            <Text style={styles.fileName}>'{this.state.fileName}'</Text>
+            <Text style={styles.fileName}>{ this._renderUploadFileName(25)}</Text>
           </CardItem>
           <CardItem>
             <Body>

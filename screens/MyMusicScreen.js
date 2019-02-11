@@ -73,7 +73,8 @@ export default class MyMusicScreen extends React.Component {
           <UploadProgress 
             progress={this.state.uploadProgress} 
             fileName={this.state.uploadFileName} 
-            onIgnore={this._onIgnorePost} />
+            onIgnore={this._onIgnorePost}
+            onPostFeed={this._onPostFeed} />
         </Container>
       );
     }
@@ -234,6 +235,7 @@ export default class MyMusicScreen extends React.Component {
   }
 
   _onUploadDone = (dloadURL) => {
+    this._onRefreshList();
     this.setState({downloadURL: dloadURL});
   }
 
@@ -243,6 +245,10 @@ export default class MyMusicScreen extends React.Component {
   }
 
   _onIgnorePost = () => {
+    this.setState({bUploading: false});
+  }
+
+  _onPostFeed = () => {
     this.setState({bUploading: false});
   }
 }
