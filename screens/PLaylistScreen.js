@@ -1,17 +1,28 @@
 import React from 'react';
 import { StyleSheet, Platform } from 'react-native';
-import { Container, View } from 'native-base';
-
-import { MusicPlayer, PlaylistItem } from '../components/MusicPlayer';
-import { AppHeader, TabID } from '../components/AppHeader';
-import { PlaylistSortableItem } from '../components/PlaylistSortableItem'
-
+import { Container, View, Spinner } from 'native-base';
 import SortableList from 'react-native-sortable-list';
+
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+	addToPlaylist,
+	addManyToPlaylist,
+	changePlaylist,
+	removeFromPlaylist,
+	adjustIndexPlaylist,
+	setIndexPlaylist,
+	playerStatusPlaylist 
+} from '../redux/actions';
+
+import MusicPlayer from '../components/MusicPlayer';
+import AppHeader, { TabID } from '../components/AppHeader';
+import PlaylistSortableItem from '../components/PlaylistSortableItem'
+
 import DataService from '../singleton/Data';
-import { ScrollView } from 'react-native-gesture-handler';
 import NativeStorage from '../singleton/NativeStorage';
 
-export default class PlaylistScreen extends React.Component {
+class PlaylistScreen extends React.Component {
   static navigationOptions = {
     header: null,
 	};
@@ -24,61 +35,43 @@ export default class PlaylistScreen extends React.Component {
 		this.bMoving = false;
 
     this.state = {
-      playlist: Array(),
-			curIndex: 0,
-			bPlayCurrent: false,
-			idItemPlaying: null,
+      bShowSpinner: true,
 			bottomMargin: 0
 		}
 	}
 	
-	async componentWillMount() {
-		const plItems = DataService.getPlaylistItem();
+	componentDidMount() {
 		let nsPlaylist = Array();
 
 		// Fetch playlist items from native storage
-		try{
-			const plist = await NativeStorage.getPlaylist();
+		NativeStorage.getPlaylist().then(plist => {
 			nsPlaylist = JSON.parse(plist);
-
-			nsPlaylist = (nsPlaylist && nsPlaylist.length > 0) ? nsPlaylist.concat(plItems) : plItems;
-		}
-		catch(error) {
-			nsPlaylist.concat(plItems);
-
-			console.log("Error fetching playlist from native storage: " + error);
-		}
-
-		this.state.playlist = nsPlaylist;
-
-		this._persistList();
+			if(nsPlaylist.length > 0) {
+				this.props.addManyToPlaylist(nsPlaylist);
+				
+				this._persistList();
+			}
+			this.setState({bShowSpinner: false});
+		}).catch(error => {
+			this.setState({bShowSpinner: false});
+		});
 	}
 
 	_persistList = () => {
-		if(this.state.playlist.length > 0) {
-			NativeStorage.persistPlaylist(this.state.playlist);
+		if(this.props.reducer.playlistStore.playlist.length > 0) {
+			NativeStorage.persistPlaylist(this.props.reducer.playlistStore.playlist);
 		}
-	}
-
-	componentDidMount() {
-		DataService.playlistObservable.subscribe(item => {
-			//console.log(item);
-			this._onAddItemToPlaylist(item);
-		});
 	}
 
 	_renderRow = ({key, index, data, active}) => {
 		//console.log(data);
-		//console.log("Index: " + index + " - Key: " + key + " - curIndex: " + this.state.curIndex);
+		//console.log("Index: " + index + " - Key: " + key + " - currentPlayIndex: " + this.props.reducer.playlistStore.currentPlayIndex);
 
-		let bLoaded = (index == this.state.curIndex && !this.bMoving) ? true : false;
+		let bLoaded = (index == this.props.reducer.playlistStore.currentPlayIndex && !this.bMoving) ? true : false;
 		if(data && !this.bMoving) {
+			//console.log("iterating for: ", data);
 			return (
-				<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} 
-					idItemPlaying={this.state.idItemPlaying}
-					onRemove={this._onRemove}
-					onPlay={this._onPlayPlaylist}
-					bPlayCurrent={this.state.bPlayCurrent} />
+				<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} />
 			);
 		}
 		else {
@@ -87,26 +80,36 @@ export default class PlaylistScreen extends React.Component {
 			);
 		}
 	}
-	
-  render() {
-		
-		return (
-			<Container>
-				<AppHeader id={TabID.PLAYLIST} title='MGooS' />
+
+	_renderSortableList = () => {
+		if(this.state.bShowSpinner) {
+			return(
+				<Spinner color='blue' />
+			);
+		}
+		else {
+			return(
 				<SortableList
 					style={{flex: 1, marginBottom: this.state.bottomMargin}}
 					showsVerticalScrollIndicator={true}
 					contentContainerStyle={styles.contentContainer}
-					data={this.state.playlist}
+					data={this.props.reducer.playlistStore.playlist}
 					renderRow={this._renderRow} 
 					onChangeOrder={this._onChangeOrder} 
 					onReleaseRow={this._onReleaseRow}
 					onActivateRow={this._onActivateRow} />
-				<MusicPlayer curIndex={this.state.curIndex} 
-					playlist={this.state.playlist} 
+			);
+		}
+	}
+	
+  render() {
+		return (
+			<Container>
+				<AppHeader id={TabID.PLAYLIST} title='MGooS' />
+				{this._renderSortableList()}
+				<MusicPlayer 
 					onPlay={this._onPlayPlayer} 
 					onPause={this._onPausePlayer}
-					bPlayCurrent={this.state.bPlayCurrent}
 					onLayout={this._onMusicPlayerLayout} />
 			</Container>
 			);
@@ -118,73 +121,32 @@ export default class PlaylistScreen extends React.Component {
 		this.setState({bottomMargin: (layout.height + 10)});
 	}
 
-	_onAddItemToPlaylist = (plItem) => {
-		this.setState({playlist: [...this.state.playlist, plItem]}, () => {
-			this._persistList();
-		});
-	}
-	
-	_onPlayPlaylist = (id) => {
-		let index = this.state.playlist.findIndex( o => o.id === id);
-		let pc = (this.state.curIndex == index) ? !this.state.bPlayCurrent : true;
-		
-		this.setState({curIndex: index, bPlayCurrent: pc, idItemPlaying: id});
-	}
-
-  _onPlayPlayer = (index) => {
-		this.setState({curIndex: index, bPlayCurrent: true, idItemPlaying: this.state.playlist[index].id});
-	}
-
-	_onPausePlayer = (index) => {
-		this.setState({bPlayCurrent: false});
-	}
-
-	_onRemove = (id) => {
-		let pl = this.state.playlist;
-		let index = pl.findIndex( o => o.id === id);
-
-		pl.splice(index, 1);
-
-		console.log(pl);
-
-		this.setState({playlist: pl}, this._persistList);
-	}
-
 	_onActivateRow = (key) => {
 		this.bMoving = true;
 	}
 	
-	_onReleaseRow = (key) => {
+	_onReleaseRow = async (key) => {
 		let ary = Array();
 		let newCurIndex = 0;
 		
 		if(this.nextOrder) {
-			this.nextOrder.forEach((e, i, a) => {
-				ary.push(this.state.playlist[e]);
-				if(e == this.state.curIndex) {
+			await Promise.all(this.nextOrder.map((e, i, a) => {
+				ary.push(this.props.reducer.playlistStore.playlist[e]);
+				if(e == this.props.reducer.playlistStore.currentPlayIndex) {
 					newCurIndex = i;
 				}
-			});
+			}));
 			console.log(ary);
 			this.bMoving = false;
-			this.setState({curIndex: newCurIndex, playlist: ary});
+			this.props.setIndexPlaylist(null, newCurIndex);
+			this.props.changePlaylist(ary);
+			//this.setState({curIndex: newCurIndex, playlist: ary});
 		}
 	}
   
 	_onChangeOrder = (nextOrder) => {
 		console.log(nextOrder);
 		this.nextOrder = nextOrder;
-	}
-
-	_adjustPlaylist = (from, to) => {
-		this.setState(state => {
-			let playlist = state.playlist;
-			playlist.splice(to, 0, playlist.splice(from, 1)[0]);
-
-			console.log(playlist);
-
-			return {playlist};
-		});
 	}
 }
 
@@ -205,6 +167,24 @@ const styles = StyleSheet.create({
 		flex: 1
 	},
 });
+
+const mapStateToProps = (state) => {
+  return {reducer: Object.assign({}, state)};
+};
+
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+		addToPlaylist,
+		addManyToPlaylist,
+		changePlaylist,
+		removeFromPlaylist,
+		adjustIndexPlaylist,
+		setIndexPlaylist,
+		playerStatusPlaylist
+  }, dispatch)
+);
+
+export default connect(mapStateToProps, mapDispatchToProps)(PlaylistScreen);
 
 /*const PLAYLIST = [
 	new PlaylistItem(

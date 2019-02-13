@@ -8,15 +8,23 @@ import {
 } from 'react-native';
 import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
 
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+    addToPlaylist,
+    removeFromPlaylist
+} from '../redux/actions';
+
 import { UploadFAB } from '../components/UploadFAB';
 import { UploadProgress } from '../components/UploadProgress';
-import { AppHeader, TabID } from '../components/AppHeader';
+import AppHeader, { TabID } from '../components/AppHeader';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
 import { MyMusicItem } from '../components/MyMusicItem';
+import NativeStorage from '../singleton/NativeStorage';
 
-export default class MyMusicScreen extends React.Component {
+class MyMusicScreen extends React.Component {
   static navigationOptions = {
     header: null,
   };
@@ -27,6 +35,7 @@ export default class MyMusicScreen extends React.Component {
     this.fetchOffset  = null;
     this.fetchLimit   = 10;
     this.timerHandle  = null;
+    this.bListLoadedFromLocal = true;
 
     this.state = {
       bUploading: false,
@@ -42,16 +51,26 @@ export default class MyMusicScreen extends React.Component {
       selected: new Map(),
       refreshing: false
     };
+  }
 
-    this._loadMyMusic.bind(this);
-    this._onUploadDone.bind(this);
-    this._onUploadError.bind(this);
-    this._onUploadInit.bind(this);
-    this._onUploadProgress.bind(this);
+  _readMusicListFromStorage = async () => {
+    NativeStorage.getMyMusic().then((sList) => {
+      const mList = JSON.parse(sList);
+      this.setState({bShowSpinner: false, musicList: Array().concat(mList)});
+    }).catch(error => {
+      this.bListLoadedFromLocal = false;
+      this._loadMyMusic();
+    });
+    
+  }
+
+  componentWillMount() {
+    // Fetch playlist items from native storage
+    this._readMusicListFromStorage();
   }
 
   componentDidMount() {
-    this._loadMyMusic();
+    
   }
 
   _renderItem = (item) => {
@@ -128,13 +147,8 @@ export default class MyMusicScreen extends React.Component {
       //console.log(list);
       if(list.length > 0) {
         const listLength = list.length;
-        //const listLength = this.state.musicList ? this.state.musicList.length : 0;
-
         this.fetchOffset = list[listLength - 1].data.createdAt;
-        //musicList = this.state.musicList.concat(list);
-
-        //console.log(this.state.musicList);
-
+        
         list.forEach((item, index, ary) => {
           const id    = item.id;
           const title = (item.data.hasOwnProperty('metaData') && 
@@ -163,7 +177,10 @@ export default class MyMusicScreen extends React.Component {
           if(index == (listLength - 1)) {
             const finalList = this.state.musicList.concat(musicList);
 
-            this.setState({refreshing: false, bShowSpinner: false, bLoaded: true, musicList: finalList});
+            this.setState({refreshing: false, bShowSpinner: false, 
+              bLoaded: true, musicList: finalList}, () => {
+              NativeStorage.persistMyMusic(this.state.musicList);
+            });
           }
         });
       }
@@ -178,17 +195,19 @@ export default class MyMusicScreen extends React.Component {
   }
 
   _onEndReached = (info) => {
-    this.timerHandle = setInterval(() => {
-      if(this.state.bLoaded && !this.state.endReached) {
-        this.setState({bLoaded: false});
-        this._loadMyMusic();
+    if(!this.bListLoadedFromLocal) {
+      this.timerHandle = setInterval(() => {
+        if(this.state.bLoaded && !this.state.endReached) {
+          this.setState({bLoaded: false});
+          this._loadMyMusic();
 
-        clearInterval(this.timerHandle);
-      }
-      else if(this.state.endReached) {
-        clearInterval(this.timerHandle);
-      }
-    }, 1000);
+          clearInterval(this.timerHandle);
+        }
+        else if(this.state.endReached) {
+          clearInterval(this.timerHandle);
+        }
+      }, 1000); 
+    }
 
     //console.log(info);
   }
@@ -196,6 +215,7 @@ export default class MyMusicScreen extends React.Component {
   _onRefreshList = () => {
     this.timerHandle  = null;
     this.fetchOffset  = null;
+    this.bListLoadedFromLocal = false;
 
     this.setState({musicList: Array(), refreshing: true, endReached: false}, () => {
       this._loadMyMusic();
@@ -203,8 +223,9 @@ export default class MyMusicScreen extends React.Component {
   }
 
   _onAddToPlaylist = (item) => {
-    DataService.AddToPlaylist(item);
-
+    //DataService.AddToPlaylist(item);
+    this.props.addToPlaylist(item);
+    
     ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
       ToastAndroid.SHORT, ToastAndroid.CENTER);
   }
@@ -216,7 +237,7 @@ export default class MyMusicScreen extends React.Component {
       // copy the map rather than modifying state.
       const selected = new Map(state.selected);
       const val = !selected.get(id);
-      selected.set(id, val); // toggle
+      selected.set(id, val); // toggle: val is boolean (true, false)
 
       nSelectCount = val ? (state.nSelectCount + 1) : (state.nSelectCount - 1);
 
@@ -260,3 +281,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   }
 });
+
+const mapStateToProps = (state) => {
+  return {reducer: Object.assign({}, state)};
+};
+
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    addToPlaylist,
+    removeFromPlaylist
+  }, dispatch)
+);
+
+export default connect(mapStateToProps, mapDispatchToProps)(MyMusicScreen);

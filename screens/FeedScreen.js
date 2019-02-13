@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  NetInfo,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,14 +13,22 @@ import {
 import { WebBrowser } from 'expo';
 import { Spinner } from 'native-base';
 
-import { AppHeader, TabID } from '../components/AppHeader';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+    addToPlaylist,
+    netConnected,
+    netDisconnected
+} from '../redux/actions';
+
+import AppHeader, { TabID } from '../components/AppHeader';
 import { FeedItem } from '../components/FeedItem';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import ImageService from '../singleton/ImageService';
 import DataService from '../singleton/Data';
 
 
-export default class FeedScreen extends React.Component {
+class FeedScreen extends React.Component {
   static navigationOptions = {
     header: null
   };
@@ -38,12 +47,23 @@ export default class FeedScreen extends React.Component {
       refreshing: false,
       endReached: false
     }
-
-    DataService.InitAddToPlaylistEvent();
   }
 
-  componentDidMount() {
+  componentWillMount() {
+    NetInfo.addEventListener('connectionChange', this._handleConnectivityChange);
+
     this._loadFeed();
+  }
+
+  _handleConnectivityChange = (connectionInfo) => {
+    if(connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+      this.props.netConnected();
+      //this.setState({isConnected: true});
+    }
+    else {
+      this.props.netDisconnected();
+      //this.setState({isConnected: false});
+    }
   }
 
   _renderItem = (item) => {
@@ -156,8 +176,9 @@ export default class FeedScreen extends React.Component {
   }
 
   _onAddToPlaylist = (item) => {
-    DataService.AddToPlaylist(item);
-
+    //DataService.AddToPlaylist(item);
+    this.props.addToPlaylist(item);
+    
     ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
       ToastAndroid.SHORT, ToastAndroid.CENTER);
   }
@@ -310,29 +331,16 @@ const styles = StyleSheet.create({
   },
 });
 
+const mapStateToProps = (state) => {
+  return {reducer: Object.assign({}, state)};
+};
 
- /*_renderFeed = () => {
-    
-    return this.state.feedList.map((obj, index, ary) => {
-      //console.log(obj);
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    addToPlaylist,
+    netConnected,
+    netDisconnected
+  }, dispatch)
+);
 
-      return (
-        <FeedItem
-          key = {obj.id}
-          id = {obj.id} 
-          profileHandle={obj.data.profile_handle} 
-          fullName={obj.data.full_name} 
-          profileImg={obj.data.profileImg} 
-          FeedMsg={obj.data.message} 
-          musicURL={obj.data.musicURL} 
-          musicCover={obj.data.musicCover} 
-          musicTitle={obj.data.musicTitle} 
-          musicAlbum={obj.data.musicAlbum} 
-          musicDuration={obj.data.musicDuration}
-          postDateTime={obj.data.post_datetime} 
-          likes={obj.data.likes}
-          onAddToPlaylist={this._onAddToPlaylist}
-        />
-      )
-    });
-  }*/
+export default connect(mapStateToProps, mapDispatchToProps)(FeedScreen);

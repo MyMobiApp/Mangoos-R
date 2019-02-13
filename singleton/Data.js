@@ -4,7 +4,7 @@ import FirebaseDBService from './FirestoreDB';
 export default class DataService {
   static profileData;
   static feedItem = null;
-  static plItemAry = Array();
+  /*static plItemAry = Array();
   static playlistObservable;
   static playlistObserver;
 
@@ -27,7 +27,7 @@ export default class DataService {
     this.plItemAry = Array();
 
     return plItemAry;
-  }
+  }*/
 
   static setPublicFeedItem(feedItem) {
     this.feedItem = feedItem;

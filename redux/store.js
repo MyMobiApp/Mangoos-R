@@ -1,8 +1,14 @@
-export const STATE = 'none' | 'playing' | 'paused' | 'stopped';
+import { createStore, combineReducers } from 'redux';
+import { NetInfoReducer } from './reducers/netInfoReducer';
+import { PlaylistReducer } from './reducers/playlistReducer';
 
-export const INITIAL_STATE = {
-    bInternetActive: false,
-    playlist: [],
-    currentPlayIndex: 0,
-    playerState: 'none'
-};
+rootReducer =  combineReducers({
+    playlistStore: PlaylistReducer,
+    netInfoStore: NetInfoReducer
+});
+
+export default class ApplicationStore {
+    static getStore = () => {
+        return createStore(rootReducer);
+    }
+}

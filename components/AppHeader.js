@@ -2,12 +2,17 @@ import React from 'react';
 import { Share, Alert, TouchableOpacity } from 'react-native';
 import { Header, Left, Body, Right, Button, Title } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
-
 import showPopupMenu from 'react-native-popup-menu-android';
-
 const firebase = require('firebase');
 // Required for side-effects
 require('firebase/firestore');
+
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+    addToPlaylist,
+    removeFromPlaylist
+} from '../redux/actions';
 
 export var TabID = {
   FEED: 1,
@@ -15,7 +20,7 @@ export var TabID = {
   PLAYLIST: 3
 };
 
-export class AppHeader extends React.Component {
+class AppHeader extends React.Component {
 
   moreButton = null;
   refMoreButton = el => this.moreButton = el;
@@ -100,8 +105,19 @@ export class AppHeader extends React.Component {
     );
   }
 
-  _onMenuPress = () => {
-    this.props.navigation.toggleDrawer();
+  _onDeletePress = () => {
+    this.props.removeManyFromPlaylist(this.props.selected);
+  }
+
+  _onAddToPlaylistPress = () => {
+    let items = this.props.reducer.playlistStore.playlist.map(o => {
+      const index = this.props.selected.findIndex(obj => obj.id === o.id);
+      if (index >= 0) {
+          return o;
+      }
+    });
+
+    this.props.addManyToPlaylist(items);
   }
 
   _onMorePress = () => {
@@ -134,3 +150,16 @@ export class AppHeader extends React.Component {
     })
   }
 }
+
+const mapStateToProps = (state) => {
+  return {reducer: Object.assign({}, state)};
+};
+
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    addToPlaylist,
+    removeFromPlaylist
+  }, dispatch)
+);
+
+export default connect(mapStateToProps, mapDispatchToProps)(AppHeader);

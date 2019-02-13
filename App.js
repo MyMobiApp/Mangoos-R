@@ -1,41 +1,25 @@
 import React from 'react';
-import { NetInfo, Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
-//import { MenuProvider } from 'react-native-popup-menu';
+import { Provider } from 'react-redux';
+import ApplicationStore from './redux/store';
 
-import { Drawer } from 'native-base';
-//import AppNavigator from './navigation/AppNavigator';
 import Login from './navigation/Login';
-
 import FirebaseDBService from './singleton/FirestoreDB';
-//import { UserProfile } from './menu/UserProfile';
-
 import './issues/setTimeoutIssue';
 
+const store = ApplicationStore.getStore();
 
 export default class App extends React.Component {
   state = {
     isLoadingComplete: false,
-    isConnected: true,
+    //isConnected: true,
   };
 
   constructor(props) {
     super(props);
 
     FirebaseDBService.init();
-  }
-
-  componentWillMount() {
-    NetInfo.addEventListener('connectionChange', this._handleConnectivityChange);
-  }
-
-  _handleConnectivityChange = (connectionInfo) => {
-    if(connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
-      this.setState({isConnected: true});
-    }
-    else {
-      this.setState({isConnected: false});
-    }
   }
 
   render() {
@@ -49,10 +33,12 @@ export default class App extends React.Component {
       );
     } else {
       return (
-        <View style={styles.container}>
-          {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-          <Login />
-        </View>
+        <Provider store={ store } >
+          <View style={styles.container}>
+            {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+            <Login />
+          </View>
+        </Provider>
       );
     }
   }

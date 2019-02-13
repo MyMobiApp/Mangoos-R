@@ -8,9 +8,20 @@ import {
   } from 'react-native';
 import { Thumbnail, Text, Right, Left, View, Icon, Button } from 'native-base';
 
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+	addToPlaylist,
+	removeFromPlaylist,
+	setIndexPlaylist,
+  playerStatusPlaylist,
+  playerState 
+} from '../redux/actions';
+
+
 const window = Dimensions.get('window');
 
-export class PlaylistSortableItem extends React.Component {
+class PlaylistSortableItem extends React.Component {
 
   constructor(props) {
     super(props);
@@ -59,9 +70,10 @@ export class PlaylistSortableItem extends React.Component {
     }
   }
 
-  _renderPlayPauseButton = () => {
+  _renderPlayPauseButton = (bCurrent, bStatus) => {
     //console.log(this.props.idItemPlaying + " - " + this.props.item.id);
-    if(this.props.bPlayCurrent && (this.props.idItemPlaying == this.props.item.id)) {
+    
+    if(bCurrent && (bStatus == playerState.Play)) {
       return (
         <Icon name='md-pause'/>
       );
@@ -74,24 +86,28 @@ export class PlaylistSortableItem extends React.Component {
   }
   
   render() {
-    const {item, bLoaded, active} = this.props;
-    //console.log(item);
+    //const {item, bLoaded, active} = this.props;
+
+    const bCurrent = this.props.reducer.playlistStore.playlist[this.props.reducer.playlistStore.currentPlayIndex].id == this.props.item.id;
+    const bStatus  = this.props.reducer.playlistStore.playerStatus;
+    
+    //console.log("Rendering : ", this.props.item);
     return (
       <Animated.View style={[
-        bLoaded ? styles.rowH : styles.row,
+        this.props.bLoaded ? styles.rowH : styles.row,
         this._style,
       ]}>
         <Left>
-          <Thumbnail source={{uri: item.coverImage}}/>
+          <Thumbnail source={{uri: this.props.item.coverImage}}/>
         </Left>
         <View style={{flexDirection: 'column', flex: 3, alignItems:'flex-start', justifyContent:'center'}}>
-          <Text>{item.title}</Text>
-          <Text note>{item.album}</Text>
+          <Text>{this.props.item.title}</Text>
+          <Text note>{this.props.item.album}</Text>
         </View>
         <Right>
           <View style={{flexDirection: "row"}}>
             <Button transparent onPress={this._onPlayFromPlaylist} style={{alignSelf:'center'}}>
-              {this._renderPlayPauseButton()}
+              {this._renderPlayPauseButton(bCurrent, bStatus)}
             </Button>
             <Button transparent onPress={this._onRemoveFromPlaylist} style={{alignSelf:'center'}}>
               <Icon name='md-close-circle-outline' />
@@ -103,11 +119,18 @@ export class PlaylistSortableItem extends React.Component {
   }
 
   _onPlayFromPlaylist = () => {
-    this.props.onPlay(this.props.item.id);
+    //this.props.onPlay(this.props.item.id);
+
+    //console.log(this.props);
+
+    this.props.setIndexPlaylist(this.props.item.id);
+    this.props.playerStatusPlaylist(playerState.Play);
   }
 
   _onRemoveFromPlaylist = () => {
-    this.props.onRemove(this.props.item.id);
+    //this.props.onRemove(this.props.item.id);
+
+    this.props.removeFromPlaylist(this.props.item.id);
   }
 }
   
@@ -208,3 +231,18 @@ const styles = StyleSheet.create({
     color: '#222222',
   },
 });
+
+const mapStateToProps = (state) => {
+  return {reducer: Object.assign({}, state)};
+};
+
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    addToPlaylist,
+	  removeFromPlaylist,
+	  setIndexPlaylist,
+	  playerStatusPlaylist
+  }, dispatch)
+);
+
+export default connect(mapStateToProps, mapDispatchToProps)(PlaylistSortableItem);

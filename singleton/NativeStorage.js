@@ -1,6 +1,15 @@
 import { AsyncStorage } from "react-native";
 
 export default class NativeStorage {
+
+    static persistMyMusic(musicListAry) {
+        return AsyncStorage.setItem('myMusic', JSON.stringify(musicListAry));
+    }
+
+    static getMyMusic() {
+        return AsyncStorage.getItem('myMusic');
+    }
+
     static persistPlaylist(playlistAry) {
         return AsyncStorage.setItem('playlist', JSON.stringify(playlistAry));
     }

@@ -12,6 +12,14 @@ import { Audio, Font, KeepAwake  } from 'expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Grid, Col } from 'native-base';
 
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { 
+    setIndexPlaylist, 
+    playerStatusPlaylist,
+    playerState 
+  } from '../redux/actions';
+
 export class PlaylistItem {
 	constructor(id, title, album, uri, coverImage, duration, createdAt, dbPath) {
         this.id             = id;
@@ -41,7 +49,7 @@ export class PlaylistItem {
 const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = Dimensions.get('window');
 const BACKGROUND_COLOR = 'white';
 const TRACKER_COLOR = 'red';
-const THUMB_RADIUS  = 5;
+const THUMB_RADIUS  = 8;
 const BUTTON_COLOR  = '#31a4db';
 const DISABLED_OPACITY = 0.5;
 const FONT_SIZE = 14;
@@ -50,7 +58,7 @@ const BUFFERING_STRING = 'Buffering...';
 const RATE_SCALE = 3.0;
 const thumbTouchSize = {width:40, height: 40};
 
-export class MusicPlayer extends React.Component {
+class MusicPlayer extends React.Component {
 
   constructor(props) {
     super(props);
@@ -77,20 +85,27 @@ export class MusicPlayer extends React.Component {
   }
 
   async componentWillReceiveProps(newProps) {
-    //console.log(this.playID + " - " + newProps.bPlayCurrent);
-    if(this.index != newProps.curIndex) {
-        this.index = newProps.curIndex;
+    //console.log("New Props Playlist: ", newProps);
 
-        console.log(this.playID + " - " + newProps.playlist[this.index].id);
-        if(this.playID != newProps.playlist[this.index].id ) {
+    if(this.index != newProps.reducer.playlistStore.currentPlayIndex) {
+        this.index = newProps.reducer.playlistStore.currentPlayIndex;
+
+        //console.log(this.playID + " - " + newProps.reducer.playlistStore.playlist[this.index].id);
+        if(this.playID != newProps.reducer.playlistStore.playlist[this.index].id ) {
             this._updatePlaybackInstanceForIndex(true);
         }
     }
-    else if(this.props.bPlayCurrent != newProps.bPlayCurrent) {
-        this._onPlayPausePressed();
+    else if(this.props.reducer.playlistStore.playerStatus != newProps.reducer.playlistStore.playerStatus) {
+        if(newProps.reducer.playlistStore.playerStatus == playerState.Play || 
+            newProps.reducer.playlistStore.playerStatus == playerState.Paused) {
+            this._onPlayPausePressed();
+        }
+        else if(newProps.reducer.playlistStore.playerStatus == playerState.Stopped) {
+            this._onStopPressed();
+        }
     }
 
-    let index = newProps.playlist.findIndex( o => o.id === this.playID);
+    let index = newProps.reducer.playlistStore.playlist.findIndex( o => o.id === this.playID);
 
     if(index < 0 && this.playbackInstance != null) {
         this._advanceIndex(true, newProps);
@@ -99,9 +114,9 @@ export class MusicPlayer extends React.Component {
         this._loadNewPlaybackInstance(false);
     }
 
-    console.log(this.props.playlist.length + " - " + newProps.playlist.length);
-    if(this.props.playlist.length == 0 && newProps.playlist.length > 0) {
-        this.index = newProps.curIndex;
+    //console.log(this.props.reducer.playlistStore.playlist.length + " - " + newProps.playlist.length);
+    if(this.props.reducer.playlistStore.playlist.length == 0 && newProps.reducer.playlistStore.playlist.length > 0) {
+        this.index = newProps.reducer.playlistStore.currentPlayIndex;
 
         this._updateScreenForLoading(true, "Checking next item in playlist...");
 
@@ -140,10 +155,10 @@ async _loadNewPlaybackInstance(playing, playIndex = null, newProps = null) {
         this.playbackInstance = null;
     }
 
-    if(props.playlist.length > 0) {
-        this.playID = props.playlist[playIndex].id;
+    if(props.reducer.playlistStore.playlist.length > 0) {
+        this.playID = props.reducer.playlistStore.playlist[playIndex].id;
 
-        const source = { uri: props.playlist[playIndex].uri };
+        const source = { uri: props.reducer.playlistStore.playlist[playIndex].uri };
         const initialStatus = {
             shouldPlay: playing,
             rate: this.state.rate,
@@ -177,8 +192,8 @@ _updateScreenForLoading(isLoading, instanceName = null) {
         });
     } else {
         this.setState({
-            playbackInstanceName: this.props.playlist[this.index].title,
-            portrait: this.props.playlist[this.index].image,
+            playbackInstanceName: this.props.reducer.playlistStore.playlist[this.index].title,
+            portrait: this.props.reducer.playlistStore.playlist[this.index].image,
             isLoading: false,
         });
     }
@@ -210,11 +225,13 @@ _advanceIndex(forward, newProps = null) {
     const props = newProps ? newProps : this.props;
 
     this.index =
-        (this.index + (forward ? 1 : props.playlist.length - 1)) %
-        props.playlist.length;
+        (this.index + (forward ? 1 : props.reducer.playlistStore.playlist.length - 1)) %
+        props.reducer.playlistStore.playlist.length;
+
+    this.props.setIndexPlaylist(null, this.index);
 
     if(newProps == null) {
-        this.props.onPlay(this.index);
+        //this.props.onPlay(this.index);
     }
 }
 
@@ -229,12 +246,17 @@ _onPlayPausePressed = () => {
         if (this.state.isPlaying) {
             this.playbackInstance.pauseAsync();
             
-            this.props.onPause(this.index);
+            this.props.setIndexPlaylist(this.index);
+            this.props.playerStatusPlaylist(playerState.Play);
+
+            //this.props.onPause(this.index);
             KeepAwake.deactivate();
         } else {
             this.playbackInstance.playAsync();
 
-            this.props.onPlay(this.index);
+            this.props.playerStatusPlaylist(playerState.Paused);
+
+            //this.props.onPlay(this.index);
             KeepAwake.activate();
         }
     }
@@ -244,7 +266,8 @@ _onStopPressed = () => {
     if (this.playbackInstance != null) {
         this.playbackInstance.stopAsync();
 
-        this.props.onPause(this.index);
+        this.props.playerStatusPlaylist(playerState.Stopped);
+        //this.props.onPause(this.index);
         KeepAwake.deactivate();
     }
 };
@@ -348,11 +371,11 @@ _getTimestamp() {
 }
 
 _renderCoverImage = () => {
-    if(this.props.playlist.length && this.props.playlist[this.index]) {
+    if(this.props.reducer.playlistStore.playlist.length && this.props.reducer.playlistStore.playlist[this.index]) {
         return (
             <Image
                 style={{width: 50, height: 50}}
-                source={{uri: this.props.playlist[this.index].coverImage }}
+                source={{uri: this.props.reducer.playlistStore.playlist[this.index].coverImage }}
             />
         );
     }
@@ -363,6 +386,13 @@ _renderCoverImage = () => {
     }
 }
 
+_renderPlaybackInstanceName = (maxLength) => {
+    let renderName = ((`${this.state.playbackInstanceName}`).length > maxLength) ? 
+    (((`${this.state.playbackInstanceName}`).substring(0,maxLength-3)) + '...') : 
+    `${this.state.playbackInstanceName}`;
+
+    return renderName;
+}
   render() {
     return !this.state.fontLoaded ? (
         <View />
@@ -378,7 +408,7 @@ _renderCoverImage = () => {
                 <Col>
                 <View style={styles.detailsContainer}>
                     <Text style={[styles.text, { fontFamily: 'roboto' }]}>
-                        {this.state.playbackInstanceName}
+                        {this._renderPlaybackInstanceName(30)}
                     </Text>
                     <Text style={[styles.text, { fontFamily: 'roboto' }]}>
                         {this.state.isBuffering ? (
@@ -592,7 +622,7 @@ const styles = StyleSheet.create({
     },
     thumb: {
         alignSelf: 'flex-start',
-        top: -4,
+        top: 0,
         width: THUMB_RADIUS * 2,
         height: THUMB_RADIUS * 2,
         backgroundColor: '#31a4db',
@@ -603,3 +633,16 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.6,
     }
 });
+
+const mapStateToProps = (state) => {
+    return {reducer: Object.assign({}, state)};
+  };
+  
+  const mapDispatchToProps = dispatch => (
+    bindActionCreators({
+        setIndexPlaylist, 
+        playerStatusPlaylist 
+    }, dispatch)
+  );
+  
+  export default connect(mapStateToProps, mapDispatchToProps)(MusicPlayer);
