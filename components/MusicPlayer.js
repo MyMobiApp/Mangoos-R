@@ -86,41 +86,40 @@ class MusicPlayer extends React.Component {
 
   async componentWillReceiveProps(newProps) {
     //console.log("New Props Playlist: ", newProps);
+    console.log("Old vs New Index: " + this.index + " - " + newProps.reducer.playlistStore.currentPlayIndex);
 
-    if(this.index != newProps.reducer.playlistStore.currentPlayIndex) {
-        this.index = newProps.reducer.playlistStore.currentPlayIndex;
+    let playIndex = newProps.reducer.playlistStore.playlist.findIndex( o => o.id === this.playID);
 
-        //console.log(this.playID + " - " + newProps.reducer.playlistStore.playlist[this.index].id);
-        if(this.playID != newProps.reducer.playlistStore.playlist[this.index].id ) {
-            this._updatePlaybackInstanceForIndex(true);
-        }
-    }
-    else if(this.props.reducer.playlistStore.playerStatus != newProps.reducer.playlistStore.playerStatus) {
-        if(newProps.reducer.playlistStore.playerStatus == playerState.Play || 
-            newProps.reducer.playlistStore.playerStatus == playerState.Paused) {
-            this._onPlayPausePressed();
-        }
-        else if(newProps.reducer.playlistStore.playerStatus == playerState.Stopped) {
-            this._onStopPressed();
-        }
-    }
-
-    let index = newProps.reducer.playlistStore.playlist.findIndex( o => o.id === this.playID);
-
-    if(index < 0 && this.playbackInstance != null) {
-        this._advanceIndex(true, newProps);
-        this._updateScreenForLoading(true, "Checking next item in playlist...");
-
-        this._loadNewPlaybackInstance(false);
-    }
-
-    //console.log(this.props.reducer.playlistStore.playlist.length + " - " + newProps.playlist.length);
     if(this.props.reducer.playlistStore.playlist.length == 0 && newProps.reducer.playlistStore.playlist.length > 0) {
         this.index = newProps.reducer.playlistStore.currentPlayIndex;
 
         this._updateScreenForLoading(true, "Checking next item in playlist...");
 
-        this._loadNewPlaybackInstance(false, null, newProps);
+        this._loadNewPlaybackInstance(false, newProps);
+    }
+    else if(playIndex < 0 && this.playbackInstance != null) {
+        this._updateScreenForLoading(true, "Checking next item in playlist...");
+
+        this._loadNewPlaybackInstance(false, newProps);
+    }
+    else if(this.index != newProps.reducer.playlistStore.currentPlayIndex) {
+        this.index = newProps.reducer.playlistStore.currentPlayIndex;
+
+        //console.log(this.playID + " - " + newProps.reducer.playlistStore.playlist[this.index].id);
+        if(this.playID != newProps.reducer.playlistStore.playlist[this.index].id) {
+            this._updateScreenForLoading(true, "Checking ...");
+    
+            this._loadNewPlaybackInstance(true, newProps);
+        }
+    }
+    else if(this.props.reducer.playlistStore.playerStatus != newProps.reducer.playlistStore.playerStatus) {
+        if(newProps.reducer.playlistStore.playerStatus == playerState.Play || 
+            newProps.reducer.playlistStore.playerStatus == playerState.Paused) {
+            this._onPlayPausePressed(false);
+        }
+        else if(newProps.reducer.playlistStore.playerStatus == playerState.Stopped) {
+            this._onStopPressed(false);
+        }
     }
   }
 
@@ -143,11 +142,12 @@ class MusicPlayer extends React.Component {
     this._loadNewPlaybackInstance(false);
 }
 
-async _loadNewPlaybackInstance(playing, playIndex = null, newProps = null) {
+async _loadNewPlaybackInstance(playing, newProps = null) {
     //console.log("playIndex: " + playIndex + " - Index: " + this.index);
     
-    playIndex = playIndex ? playIndex : this.index;
     props = newProps ? newProps : this.props;
+    // Disable playlist play buttons
+    this.props.onChangingTrack();
     
     if (this.playbackInstance != null) {
         await this.playbackInstance.unloadAsync();
@@ -156,9 +156,9 @@ async _loadNewPlaybackInstance(playing, playIndex = null, newProps = null) {
     }
 
     if(props.reducer.playlistStore.playlist.length > 0) {
-        this.playID = props.reducer.playlistStore.playlist[playIndex].id;
+        this.playID = props.reducer.playlistStore.playlist[this.index].id;
 
-        const source = { uri: props.reducer.playlistStore.playlist[playIndex].uri };
+        const source = { uri: props.reducer.playlistStore.playlist[this.index].uri };
         const initialStatus = {
             shouldPlay: playing,
             rate: this.state.rate,
@@ -177,6 +177,9 @@ async _loadNewPlaybackInstance(playing, playIndex = null, newProps = null) {
     else {
         this._updateScreenForLoading(true, "Playlist is empty...");
     }
+
+    // Enable playlist play buttons
+    this.props.onChangingTrack();
 }
 
 _updateScreenForLoading(isLoading, instanceName = null) {
@@ -221,18 +224,12 @@ _onPlaybackStatusUpdate = status => {
     }
 };
 
-_advanceIndex(forward, newProps = null) {
-    const props = newProps ? newProps : this.props;
-
+_advanceIndex(forward) {
     this.index =
-        (this.index + (forward ? 1 : props.reducer.playlistStore.playlist.length - 1)) %
-        props.reducer.playlistStore.playlist.length;
+        (this.index + (forward ? 1 : this.props.reducer.playlistStore.playlist.length - 1)) %
+        this.props.reducer.playlistStore.playlist.length;
 
     this.props.setIndexPlaylist(null, this.index);
-
-    if(newProps == null) {
-        //this.props.onPlay(this.index);
-    }
 }
 
 async _updatePlaybackInstanceForIndex(playing) {
@@ -241,33 +238,37 @@ async _updatePlaybackInstanceForIndex(playing) {
     this._loadNewPlaybackInstance(playing);
 }
 
-_onPlayPausePressed = () => {
+_onPlayPausePressed = (bUpdateProps = true) => {
     if (this.playbackInstance != null) {
         if (this.state.isPlaying) {
             this.playbackInstance.pauseAsync();
             
-            this.props.setIndexPlaylist(this.index);
-            this.props.playerStatusPlaylist(playerState.Play);
-
-            //this.props.onPause(this.index);
+            if(bUpdateProps) {
+                this.props.setIndexPlaylist(null, this.index);
+                this.props.playerStatusPlaylist(playerState.Paused);
+            }
+            
             KeepAwake.deactivate();
         } else {
             this.playbackInstance.playAsync();
 
-            this.props.playerStatusPlaylist(playerState.Paused);
-
-            //this.props.onPlay(this.index);
+            if(bUpdateProps) {
+                this.props.playerStatusPlaylist(playerState.Play);
+            }
+            
             KeepAwake.activate();
         }
     }
 };
 
-_onStopPressed = () => {
+_onStopPressed = (bUpdateProps = true) => {
     if (this.playbackInstance != null) {
         this.playbackInstance.stopAsync();
 
-        this.props.playerStatusPlaylist(playerState.Stopped);
-        //this.props.onPause(this.index);
+        if(bUpdateProps) {
+            this.props.playerStatusPlaylist(playerState.Stopped);
+        }
+        
         KeepAwake.deactivate();
     }
 };
@@ -622,7 +623,7 @@ const styles = StyleSheet.create({
     },
     thumb: {
         alignSelf: 'flex-start',
-        top: 0,
+        top: -8,
         width: THUMB_RADIUS * 2,
         height: THUMB_RADIUS * 2,
         backgroundColor: '#31a4db',

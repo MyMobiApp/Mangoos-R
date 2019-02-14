@@ -17,6 +17,7 @@ import {
   playerStatusPlaylist,
   playerState 
 } from '../redux/actions';
+import NativeStorage from '../singleton/NativeStorage';
 
 
 const window = Dimensions.get('window');
@@ -70,10 +71,10 @@ class PlaylistSortableItem extends React.Component {
     }
   }
 
-  _renderPlayPauseButton = (bCurrent, bStatus) => {
+  _renderPlayPauseButton = (bCurrent, eStatus) => {
     //console.log(this.props.idItemPlaying + " - " + this.props.item.id);
     
-    if(bCurrent && (bStatus == playerState.Play)) {
+    if(bCurrent && (eStatus == playerState.Play)) {
       return (
         <Icon name='md-pause'/>
       );
@@ -87,9 +88,11 @@ class PlaylistSortableItem extends React.Component {
   
   render() {
     //const {item, bLoaded, active} = this.props;
+    const curIndex = this.props.reducer.playlistStore.currentPlayIndex;
+    const playlistItem = this.props.reducer.playlistStore.playlist[curIndex];
 
-    const bCurrent = this.props.reducer.playlistStore.playlist[this.props.reducer.playlistStore.currentPlayIndex].id == this.props.item.id;
-    const bStatus  = this.props.reducer.playlistStore.playerStatus;
+    const bCurrent = playlistItem ? playlistItem.id == this.props.item.id : false;
+    const eStatus  = this.props.reducer.playlistStore.playerStatus;
     
     //console.log("Rendering : ", this.props.item);
     return (
@@ -106,10 +109,14 @@ class PlaylistSortableItem extends React.Component {
         </View>
         <Right>
           <View style={{flexDirection: "row"}}>
-            <Button transparent onPress={this._onPlayFromPlaylist} style={{alignSelf:'center'}}>
-              {this._renderPlayPauseButton(bCurrent, bStatus)}
+            <Button transparent onPress={this._onPlayFromPlaylist} 
+              style={{alignSelf:'center'}}
+              disabled={!this.props.bDisablePlay} >
+              {this._renderPlayPauseButton(bCurrent, eStatus)}
             </Button>
-            <Button transparent onPress={this._onRemoveFromPlaylist} style={{alignSelf:'center'}}>
+            <Button transparent onPress={this._onRemoveFromPlaylist} 
+              style={{alignSelf:'center'}}
+              disabled={!this.props.bDisablePlay} >
               <Icon name='md-close-circle-outline' />
             </Button>
           </View>
@@ -128,9 +135,12 @@ class PlaylistSortableItem extends React.Component {
   }
 
   _onRemoveFromPlaylist = () => {
-    //this.props.onRemove(this.props.item.id);
+    const curIndex = this.props.reducer.playlistStore.currentPlayIndex;
+    const playlistItem = this.props.reducer.playlistStore.playlist[curIndex];
 
-    this.props.removeFromPlaylist(this.props.item.id);
+    const bAdjust = playlistItem ? (playlistItem.id == this.props.item.id) : false
+
+    this.props.removeFromPlaylist(this.props.item.id, null, bAdjust);
   }
 }
   

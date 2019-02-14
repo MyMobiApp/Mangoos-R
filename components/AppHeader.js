@@ -1,5 +1,5 @@
 import React from 'react';
-import { Share, Alert, TouchableOpacity } from 'react-native';
+import { Share, Alert, ToastAndroid } from 'react-native';
 import { Header, Left, Body, Right, Button, Title } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import showPopupMenu from 'react-native-popup-menu-android';
@@ -10,8 +10,8 @@ require('firebase/firestore');
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { 
-    addToPlaylist,
-    removeFromPlaylist
+    addManyToPlaylist,
+    removeManyFromPlaylist
 } from '../redux/actions';
 
 export var TabID = {
@@ -42,9 +42,11 @@ class AppHeader extends React.Component {
     if(this.props.selectCount) {
       return (
         <Right>
+          {/* 
           <Button transparent onPress={this._onDeletePress} >
             <MaterialIcons name='delete' size={24} color='white'/>
           </Button>
+          */}
           <Button transparent onPress={this._onAddToPlaylistPress}>
             <MaterialIcons name='playlist-add' size={24} color='white'/>
           </Button>
@@ -110,14 +112,14 @@ class AppHeader extends React.Component {
   }
 
   _onAddToPlaylistPress = () => {
-    let items = this.props.reducer.playlistStore.playlist.map(o => {
-      const index = this.props.selected.findIndex(obj => obj.id === o.id);
-      if (index >= 0) {
-          return o;
-      }
-    });
+    console.log("AppHeader Props: ", this.props);
+    
+    this.props.addManyToPlaylist(this.props.selected);
 
-    this.props.addManyToPlaylist(items);
+    ToastAndroid.showWithGravity(`${this.props.selected.length} items added to playlist!`, 
+      ToastAndroid.SHORT, ToastAndroid.CENTER);
+
+    this.props.clearSelectionCallback();
   }
 
   _onMorePress = () => {
@@ -157,8 +159,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = dispatch => (
   bindActionCreators({
-    addToPlaylist,
-    removeFromPlaylist
+    addManyToPlaylist,
+    removeManyFromPlaylist
   }, dispatch)
 );
 

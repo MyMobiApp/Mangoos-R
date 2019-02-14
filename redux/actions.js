@@ -45,10 +45,10 @@ export const changePlaylist = (items) => (
     }
 );
 
-export const removeFromPlaylist = (id, index = null) => (
+export const removeFromPlaylist = (id, index = null, bAdjust = null) => (
     {
         type: playlistActions.Remove,
-        payload: {id, index}
+        payload: {id, index, bAdjust}
     }
 );
 

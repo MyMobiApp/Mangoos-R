@@ -3,7 +3,7 @@ import { netStateActions } from '../actions';
 
 
 export const NetInfoReducer = (state = initialState, action) => {
-    console.log("NetInfoReducer reducer: ", action, state);
+    //console.log("NetInfoReducer reducer: ", action, state);
 
     switch(action.type) {
         case netStateActions.Connected: {

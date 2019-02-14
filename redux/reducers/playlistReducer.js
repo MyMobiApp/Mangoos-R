@@ -1,8 +1,9 @@
 import { initialState } from '../state';
-import { playlistActions } from '../actions';
+import { playlistActions, playerState } from '../actions';
 
 export const PlaylistReducer = (state = initialState, action) => {
-    console.log("Playlist reducer: ", action, state);
+    //console.log("Playlist reducer: ", action, state);
+    console.log("action", action);
 
     switch(action.type) {
         case playlistActions.AddOne: {
@@ -12,7 +13,7 @@ export const PlaylistReducer = (state = initialState, action) => {
         }
         case playlistActions.AddMany: {
             const playlistItems = action.payload;
-
+            
             return Object.assign({}, state, {playlist: state.playlist.concat(playlistItems)});
         }
         case playlistActions.Change: {
@@ -22,12 +23,30 @@ export const PlaylistReducer = (state = initialState, action) => {
         }
         case playlistActions.Remove : {
             const idToRemove = action.payload.id;
+            const bAdjust    = action.payload.bAdjust;
+
             const index = state.playlist.findIndex( o => o.id === idToRemove);
             
-            let newPlaylist = state.playlist;
-            newPlaylist.splice(index, 1);
+            if(index >= 0) {
+                let newPlaylist = state.playlist;
+                newPlaylist.splice(index, 1);
 
-            return Object.assign({}, state, {playlist: Array().concat(newPlaylist)});
+                if(bAdjust) {
+                    const index = (newPlaylist.length > 0) ? ((state.currentPlayIndex + 1) % newPlaylist.length) : 0;
+                    return Object.assign({}, state, 
+                        {
+                            currentPlayIndex: index, 
+                            playerStatus: playerState.None,
+                            playlist: Array().concat(newPlaylist)
+                        });
+                }
+                else {
+                    return Object.assign({}, state, {playlist: Array().concat(newPlaylist)});
+                }
+            }
+            else {
+                return state;
+            }
         }
         case playlistActions.RemoveMany: {
             const idMap = action.payload;
@@ -52,7 +71,8 @@ export const PlaylistReducer = (state = initialState, action) => {
         }
         case playlistActions.SetIndex: {
             let newIndex;
-            if(action.payload.index) {
+            
+            if(action.payload.index != null) {
                 newIndex = action.payload.index;
             }
             else {

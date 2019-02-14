@@ -35,6 +35,7 @@ class PlaylistScreen extends React.Component {
 		this.bMoving = false;
 
     this.state = {
+			bDisablePlay: false,
       bShowSpinner: true,
 			bottomMargin: 0
 		}
@@ -57,6 +58,12 @@ class PlaylistScreen extends React.Component {
 		});
 	}
 
+	componentWillReceiveProps(newProps) {
+		if(this.props.reducer.playlistStore.playlist.length != newProps.reducer.playlistStore.playlist.length) {
+			NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
+		}
+	}
+
 	_persistList = () => {
 		if(this.props.reducer.playlistStore.playlist.length > 0) {
 			NativeStorage.persistPlaylist(this.props.reducer.playlistStore.playlist);
@@ -71,7 +78,11 @@ class PlaylistScreen extends React.Component {
 		if(data && !this.bMoving) {
 			//console.log("iterating for: ", data);
 			return (
-				<PlaylistSortableItem bLoaded={bLoaded} item={data} active={active} />
+				<PlaylistSortableItem 
+					bDisablePlay={this.state.bDisablePlay} 
+					bLoaded={bLoaded} 
+					item={data} 
+					active={active} />
 			);
 		}
 		else {
@@ -108,11 +119,14 @@ class PlaylistScreen extends React.Component {
 				<AppHeader id={TabID.PLAYLIST} title='MGooS' />
 				{this._renderSortableList()}
 				<MusicPlayer 
-					onPlay={this._onPlayPlayer} 
-					onPause={this._onPausePlayer}
+					onChangingTrack={this._onTogglePlaylistPlayButtonVisibility}
 					onLayout={this._onMusicPlayerLayout} />
 			</Container>
 			);
+	}
+
+	_onTogglePlaylistPlayButtonVisibility = () => {
+		this.setState({bDisablePlay: !this.state.bDisablePlay});
 	}
 
 	_onMusicPlayerLayout = (layout) => {

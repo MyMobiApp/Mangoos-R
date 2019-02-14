@@ -49,6 +49,7 @@ class MyMusicScreen extends React.Component {
       bFetching: true,
       nSelectCount: 0,
       selected: new Map(),
+      selectedItemAry: Array(),
       refreshing: false
     };
   }
@@ -84,7 +85,7 @@ class MyMusicScreen extends React.Component {
   }
   
   render() {
-
+    
     if(this.state.bUploading) {
       return (
         <Container>
@@ -109,29 +110,32 @@ class MyMusicScreen extends React.Component {
       //console.log(this.state.musicList);
       return (
         <Container>
-          <AppHeader id={TabID.MYMUSIC} title='MGooS' selectCount={this.state.nSelectCount} selected={this.state.selected}/>
-            <ScrollView refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefreshList}/>} >
-              <View style={styles.container}>
-                <FlatList
-                  data={this.state.musicList}
-                  keyExtractor={item => item.id}
-                  /*onRefresh={this._onRefreshList}
-                  refreshing={this.state.refreshing}*/
-                  onEndReached={this._onEndReached}
-                  onEndReachedThreshold={0.5}
-                  renderItem={({ item }) => this._renderItem(item)}
-                />
-                <ListItem noBorder>
-                  <Body><Text></Text></Body>
-                </ListItem>
-                <ListItem noBorder>
-                  <Body><Text></Text></Body>
-                </ListItem>
-                <ListItem noBorder>
-                  <Body><Text></Text></Body>
-                </ListItem>
-              </View>
-            </ScrollView>
+          <AppHeader id={TabID.MYMUSIC} title='MGooS' 
+            selectCount={this.state.nSelectCount} 
+            selected={this.state.selectedItemAry} 
+            clearSelectionCallback={this._clearSelection} />
+          <ScrollView refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefreshList}/>} >
+            <View style={styles.container}>
+              <FlatList
+                data={this.state.musicList}
+                keyExtractor={item => item.id}
+                /*onRefresh={this._onRefreshList}
+                refreshing={this.state.refreshing}*/
+                onEndReached={this._onEndReached}
+                onEndReachedThreshold={0.5}
+                renderItem={({ item }) => this._renderItem(item)}
+              />
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
+              <ListItem noBorder>
+                <Body><Text></Text></Body>
+              </ListItem>
+            </View>
+          </ScrollView>
           <UploadFAB onInit={this._onUploadInit} onProgress={this._onUploadProgress} onDone={this._onUploadDone} onError={this._onUploadError}/>
         </Container>
       );
@@ -230,6 +234,10 @@ class MyMusicScreen extends React.Component {
       ToastAndroid.SHORT, ToastAndroid.CENTER);
   }
 
+  _clearSelection = () => {
+    this.setState({selected: new Map()});
+  }
+
   _onThumbnailPress = (id) => {
     //console.log(item);
     
@@ -239,9 +247,12 @@ class MyMusicScreen extends React.Component {
       const val = !selected.get(id);
       selected.set(id, val); // toggle: val is boolean (true, false)
 
+      const selectedItem = state.musicList.find(o => o.id === id);
+      const selectedItemAry = state.selectedItemAry.concat(selectedItem);
+
       nSelectCount = val ? (state.nSelectCount + 1) : (state.nSelectCount - 1);
 
-      return {selected, nSelectCount};
+      return {selected, selectedItemAry, nSelectCount};
     });
   }
 
