@@ -86,7 +86,7 @@ class MusicPlayer extends React.Component {
 
   async componentWillReceiveProps(newProps) {
     //console.log("New Props Playlist: ", newProps);
-    console.log("Old vs New Index: " + this.index + " - " + newProps.reducer.playlistStore.currentPlayIndex);
+    //console.log("Old vs New Index: " + this.index + " - " + newProps.reducer.playlistStore.currentPlayIndex);
 
     let playIndex = newProps.reducer.playlistStore.playlist.findIndex( o => o.id === this.playID);
 

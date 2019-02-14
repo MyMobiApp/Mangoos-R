@@ -3,7 +3,7 @@ import { playlistActions, playerState } from '../actions';
 
 export const PlaylistReducer = (state = initialState, action) => {
     //console.log("Playlist reducer: ", action, state);
-    console.log("action", action);
+    //console.log("action", action);
 
     switch(action.type) {
         case playlistActions.AddOne: {
@@ -14,12 +14,16 @@ export const PlaylistReducer = (state = initialState, action) => {
         case playlistActions.AddMany: {
             const playlistItems = action.payload;
             
-            return Object.assign({}, state, {playlist: state.playlist.concat(playlistItems)});
+            return Object.assign({}, state, {
+                playerStatus: playerState.None, 
+                playlist: state.playlist.concat(playlistItems)});
         }
         case playlistActions.Change: {
-            const playlistItems = action.payload;
+            const playlistItems = action.payload.items;
+            const newCurIndex   = action.payload.newCurIndex;
 
-            return Object.assign({}, state, {playlist: Array().concat(playlistItems)});
+            return Object.assign({}, state, {currentPlayIndex: newCurIndex, 
+                playlist: Array().concat(playlistItems)});
         }
         case playlistActions.Remove : {
             const idToRemove = action.payload.id;

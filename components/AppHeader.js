@@ -112,7 +112,7 @@ class AppHeader extends React.Component {
   }
 
   _onAddToPlaylistPress = () => {
-    console.log("AppHeader Props: ", this.props);
+    //console.log("AppHeader Props: ", this.props);
     
     this.props.addManyToPlaylist(this.props.selected);
 

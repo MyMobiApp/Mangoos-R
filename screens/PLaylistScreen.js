@@ -33,6 +33,7 @@ class PlaylistScreen extends React.Component {
     super(props);
 
 		this.bMoving = false;
+		this.bShouldUpdate = true;
 
     this.state = {
 			bDisablePlay: false,
@@ -59,9 +60,14 @@ class PlaylistScreen extends React.Component {
 	}
 
 	componentWillReceiveProps(newProps) {
-		if(this.props.reducer.playlistStore.playlist.length != newProps.reducer.playlistStore.playlist.length) {
-			NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
-		}
+		NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
+	}
+
+	shouldComponentUpdate(newProps) {
+		const update = this.bShouldUpdate;
+		this.bShouldUpdate = true;
+
+		return update;
 	}
 
 	_persistList = () => {
@@ -73,14 +79,13 @@ class PlaylistScreen extends React.Component {
 	_renderRow = ({key, index, data, active}) => {
 		//console.log(data);
 		//console.log("Index: " + index + " - Key: " + key + " - currentPlayIndex: " + this.props.reducer.playlistStore.currentPlayIndex);
+		//let bLoaded = (index == this.props.reducer.playlistStore.currentPlayIndex && !this.bMoving) ? true : false;
 
-		let bLoaded = (index == this.props.reducer.playlistStore.currentPlayIndex && !this.bMoving) ? true : false;
-		if(data && !this.bMoving) {
+		if(data) {
 			//console.log("iterating for: ", data);
 			return (
 				<PlaylistSortableItem 
 					bDisablePlay={this.state.bDisablePlay} 
-					bLoaded={bLoaded} 
 					item={data} 
 					active={active} />
 			);
@@ -122,7 +127,7 @@ class PlaylistScreen extends React.Component {
 					onChangingTrack={this._onTogglePlaylistPlayButtonVisibility}
 					onLayout={this._onMusicPlayerLayout} />
 			</Container>
-			);
+		);
 	}
 
 	_onTogglePlaylistPlayButtonVisibility = () => {
@@ -150,11 +155,10 @@ class PlaylistScreen extends React.Component {
 					newCurIndex = i;
 				}
 			}));
-			console.log(ary);
+			//console.log(ary);
+			this.bShouldUpdate = false;
+			this.props.changePlaylist(ary, newCurIndex);
 			this.bMoving = false;
-			this.props.setIndexPlaylist(null, newCurIndex);
-			this.props.changePlaylist(ary);
-			//this.setState({curIndex: newCurIndex, playlist: ary});
 		}
 	}
   

@@ -38,10 +38,10 @@ export const addManyToPlaylist = (items) => (
     }
 );
 
-export const changePlaylist = (items) => (
+export const changePlaylist = (items, newCurIndex = 0) => (
     {
         type: playlistActions.Change,
-        payload: items
+        payload: {items, newCurIndex}
     }
 );
 

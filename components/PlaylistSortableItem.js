@@ -87,7 +87,6 @@ class PlaylistSortableItem extends React.Component {
   }
   
   render() {
-    //const {item, bLoaded, active} = this.props;
     const curIndex = this.props.reducer.playlistStore.currentPlayIndex;
     const playlistItem = this.props.reducer.playlistStore.playlist[curIndex];
 
@@ -97,7 +96,7 @@ class PlaylistSortableItem extends React.Component {
     //console.log("Rendering : ", this.props.item);
     return (
       <Animated.View style={[
-        this.props.bLoaded ? styles.rowH : styles.row,
+        bCurrent ? styles.rowH : styles.row,
         this._style,
       ]}>
         <Left>
