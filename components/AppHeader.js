@@ -11,7 +11,9 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { 
     addManyToPlaylist,
-    removeManyFromPlaylist
+    removeManyFromPlaylist,
+    playerStatusPlaylist,
+    playerState
 } from '../redux/actions';
 
 export var TabID = {
@@ -100,7 +102,12 @@ class AppHeader extends React.Component {
         },
         {
           text: 'Yes', 
-          onPress: () => firebase.auth().signOut()
+          onPress: () => {
+            this.props.playerStatusPlaylist(playerState.Stopped);
+            setTimeout(() => {
+              firebase.auth().signOut();
+            }, 500);
+          }
         },
       ],
       {cancelable: false},
@@ -160,7 +167,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = dispatch => (
   bindActionCreators({
     addManyToPlaylist,
-    removeManyFromPlaylist
+    removeManyFromPlaylist,
+    playerStatusPlaylist
   }, dispatch)
 );
 

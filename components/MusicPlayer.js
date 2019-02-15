@@ -4,7 +4,8 @@ import {
 	Image,
 	StyleSheet,
 	Text,
-	TouchableHighlight,
+    TouchableHighlight,
+    TouchableWithoutFeedback,
 	View,
 } from 'react-native';
 import Slider from 'react-native-slider';
@@ -87,6 +88,7 @@ class MusicPlayer extends React.Component {
   async componentWillReceiveProps(newProps) {
     //console.log("New Props Playlist: ", newProps);
     //console.log("Old vs New Index: " + this.index + " - " + newProps.reducer.playlistStore.currentPlayIndex);
+    //alert(this.props.reducer.playlistStore.playerStatus + " - " + newProps.reducer.playlistStore.playerStatus);
 
     let playIndex = newProps.reducer.playlistStore.playlist.findIndex( o => o.id === this.playID);
 
@@ -114,7 +116,8 @@ class MusicPlayer extends React.Component {
     }
     else if(this.props.reducer.playlistStore.playerStatus != newProps.reducer.playlistStore.playerStatus) {
         if(newProps.reducer.playlistStore.playerStatus == playerState.Play || 
-            newProps.reducer.playlistStore.playerStatus == playerState.Paused) {
+            newProps.reducer.playlistStore.playerStatus == playerState.Paused ||
+            newProps.reducer.playlistStore.playerStatus === undefined) {
             this._onPlayPausePressed(false);
         }
         else if(newProps.reducer.playlistStore.playerStatus == playerState.Stopped) {
@@ -319,6 +322,7 @@ _onSeekSliderSlidingComplete = async value => {
     if (this.playbackInstance != null) {
         this.isSeeking = false;
         const seekPosition = value * this.state.playbackInstanceDuration;
+        
         if (this.shouldPlayAtEndOfSeek) {
             this.playbackInstance.playFromPositionAsync(seekPosition);
         } else {
@@ -394,6 +398,15 @@ _renderPlaybackInstanceName = (maxLength) => {
 
     return renderName;
 }
+
+_tapSliderHandler = (evt) => {
+    this.refs.slider.measure( (fx, fy, width, height, px, py) => { 
+        const sliderTapValue = (evt.nativeEvent.locationX - px) / width;
+        
+        this._onSeekSliderSlidingComplete(sliderTapValue);
+    }); 
+}
+
   render() {
     return !this.state.fontLoaded ? (
         <View />
@@ -498,6 +511,7 @@ _renderPlaybackInstanceName = (maxLength) => {
                 </TouchableHighlight>
             </View>
             <View
+                ref='slider'
                 style={[
                     styles.playbackContainer,
                     {
@@ -507,17 +521,19 @@ _renderPlaybackInstanceName = (maxLength) => {
                     },
                 ]}
             >
-                <Slider
-                    style={styles.playbackContainer}
-                    value={this._getSeekSliderPosition()}
-                    onValueChange={this._onSeekSliderValueChange}
-                    onSlidingComplete={this._onSeekSliderSlidingComplete}
-                    disabled={this.state.isLoading}
-                    trackStyle={styles.track}
-                    thumbStyle={styles.thumb}
-                    minimumTrackTintColor={TRACKER_COLOR}
-                    thumbTouchSize={thumbTouchSize}
-                />
+                <TouchableWithoutFeedback onPressIn={this._tapSliderHandler}>
+                    <Slider
+                        style={styles.playbackContainer}
+                        value={this._getSeekSliderPosition()}
+                        onValueChange={this._onSeekSliderValueChange}
+                        onSlidingComplete={this._onSeekSliderSlidingComplete}
+                        disabled={this.state.isLoading}
+                        trackStyle={styles.track}
+                        thumbStyle={styles.thumb}
+                        minimumTrackTintColor={TRACKER_COLOR}
+                        thumbTouchSize={thumbTouchSize}
+                    />
+                </TouchableWithoutFeedback>
             </View>
         </View>
     );

@@ -50,6 +50,13 @@ class FeedScreen extends React.Component {
   }
 
   componentWillMount() {
+    if(NetInfo.isConnected) {
+      this.props.netConnected();
+    }
+    else {
+      this.props.netDisconnected();
+    }
+
     NetInfo.addEventListener('connectionChange', this._handleConnectivityChange);
 
     this._loadFeed();
@@ -58,11 +65,9 @@ class FeedScreen extends React.Component {
   _handleConnectivityChange = (connectionInfo) => {
     if(connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
       this.props.netConnected();
-      //this.setState({isConnected: true});
     }
     else {
       this.props.netDisconnected();
-      //this.setState({isConnected: false});
     }
   }
 

@@ -73,17 +73,17 @@ export const adjustIndexPlaylist = (forward) => (
     }
 );
 
-export const setIndexPlaylist = (id, index = null) => (
+export const setIndexPlaylist = (id, index = null, play=false) => (
     {
         type: playlistActions.SetIndex,
-        payload: {id, index}
+        payload: {id, index, play}
     }
 );
 
 export const playerStatusPlaylist = (status) => (
     {
         type: playlistActions.PlayerStatus,
-        payload: status
+        payload: {status}
     }
 );
 

@@ -84,11 +84,17 @@ export const PlaylistReducer = (state = initialState, action) => {
                 newIndex = state.playlist.findIndex( o => o.id === id);
             }
 
-            return Object.assign({}, state, {currentPlayIndex: newIndex});
+            if(action.payload.play) {
+                return Object.assign({}, state, {currentPlayIndex: newIndex, playerStatus: playerState.Play});
+            }
+            else {
+                return Object.assign({}, state, {currentPlayIndex: newIndex});
+            }
+            
         }
         case playlistActions.PlayerStatus: {
-            const newStatus = action.payload;
-
+            const newStatus = action.payload.status;
+            
             return Object.assign({}, state, {playerStatus: newStatus});
         }
         default : {

@@ -21,7 +21,7 @@ import AppHeader, { TabID } from '../components/AppHeader';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
-import { MyMusicItem } from '../components/MyMusicItem';
+import MyMusicItem from '../components/MyMusicItem';
 import NativeStorage from '../singleton/NativeStorage';
 
 class MyMusicScreen extends React.Component {
@@ -54,24 +54,21 @@ class MyMusicScreen extends React.Component {
     };
   }
 
-  _readMusicListFromStorage = async () => {
+  _readMusicListFromStorage = () => {
     NativeStorage.getMyMusic().then((sList) => {
       const mList = JSON.parse(sList);
       this.setState({bShowSpinner: false, musicList: Array().concat(mList)});
     }).catch(error => {
+      console.log("_readMusicListFromStorage: ", error);
       this.bListLoadedFromLocal = false;
       this._loadMyMusic();
     });
     
   }
 
-  componentWillMount() {
+  componentDidMount() {
     // Fetch playlist items from native storage
     this._readMusicListFromStorage();
-  }
-
-  componentDidMount() {
-    
   }
 
   _renderItem = (item) => {
@@ -80,6 +77,7 @@ class MyMusicScreen extends React.Component {
         item={item}
         onItemPress={this._onThumbnailPress}
         onAddToPlaylist={this._onAddToPlaylist}
+        onRemoveItem={this._onRemoveItemFromMusicList}
         selected={!!this.state.selected.get(item.id)} />
     );
   }
@@ -232,6 +230,14 @@ class MyMusicScreen extends React.Component {
     
     ToastAndroid.showWithGravity(`${item.title} added to playlist!`, 
       ToastAndroid.SHORT, ToastAndroid.CENTER);
+  }
+
+  _onRemoveItemFromMusicList = (id) => {
+    this.props.removeFromPlaylist(id);
+    
+    const newList = this.state.musicList.map(o => o.id !== id);
+
+    this.setState({musicList: newList});
   }
 
   _clearSelection = () => {

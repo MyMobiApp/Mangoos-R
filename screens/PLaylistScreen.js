@@ -12,7 +12,8 @@ import {
 	removeFromPlaylist,
 	adjustIndexPlaylist,
 	setIndexPlaylist,
-	playerStatusPlaylist 
+	playerStatusPlaylist,
+	playerState 
 } from '../redux/actions';
 
 import MusicPlayer from '../components/MusicPlayer';
@@ -60,7 +61,18 @@ class PlaylistScreen extends React.Component {
 	}
 
 	componentWillReceiveProps(newProps) {
-		NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
+		//alert(newProps.reducer.netInfoStore.bInternetActive + " - " + this.props.reducer.playlistStore.playerStatus );
+		//alert(JSON.stringify(newProps.reducer.playlistStore));
+		if(this.props.reducer.playlistStore.playlist != newProps.reducer.playlistStore.playlist.length){
+			NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
+		}
+
+    if(!newProps.reducer.netInfoStore.bInternetActive && (this.props.reducer.playlistStore.playerStatus == playerState.Play)) {
+			this.props.playerStatusPlaylist(playerState.Pause);
+		}
+		else if(newProps.reducer.netInfoStore.bInternetActive && (this.props.reducer.playlistStore.playerStatus == playerState.Pause)) {
+			this.props.playerStatusPlaylist(playerState.Play);
+		}
 	}
 
 	shouldComponentUpdate(newProps) {
@@ -155,15 +167,20 @@ class PlaylistScreen extends React.Component {
 					newCurIndex = i;
 				}
 			}));
-			//console.log(ary);
-			this.bShouldUpdate = false;
+			
+			this._dontUpdateComponentOnNextPropsChange();
 			this.props.changePlaylist(ary, newCurIndex);
+
 			this.bMoving = false;
 		}
 	}
+
+	_dontUpdateComponentOnNextPropsChange = () => {
+		this.bShouldUpdate = false;
+	}
   
 	_onChangeOrder = (nextOrder) => {
-		console.log(nextOrder);
+		//console.log(nextOrder);
 		this.nextOrder = nextOrder;
 	}
 }

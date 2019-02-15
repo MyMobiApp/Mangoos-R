@@ -3,8 +3,8 @@ import { Alert, ToastAndroid, TouchableOpacity } from 'react-native';
 import { Spinner, ListItem, View, Right, Text, Left, Thumbnail, Body, Button } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
-
 import showPopupMenu from 'react-native-popup-menu-android';
+
 import FirebaseDBService from '../singleton/FirestoreDB';
 
 
@@ -159,8 +159,10 @@ export class MyMusicItem extends React.Component {
                 onPress: () => {
                     FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
                         .then(() => {
-                            ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
-                                ToastAndroid.SHORT, ToastAndroid.CENTER);
+                          ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
+                            ToastAndroid.SHORT, ToastAndroid.CENTER);
+
+                          this.props.onRemoveItem(this.props.item.id);
                         }).catch(error => {
                             ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
                         });

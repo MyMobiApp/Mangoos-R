@@ -92,7 +92,7 @@ class PlaylistSortableItem extends React.Component {
 
     const bCurrent = playlistItem ? playlistItem.id == this.props.item.id : false;
     const eStatus  = this.props.reducer.playlistStore.playerStatus;
-    
+   
     //console.log("Rendering : ", this.props.item);
     return (
       <Animated.View style={[
@@ -125,12 +125,20 @@ class PlaylistSortableItem extends React.Component {
   }
 
   _onPlayFromPlaylist = () => {
-    //this.props.onPlay(this.props.item.id);
+    const curIndex = this.props.reducer.playlistStore.currentPlayIndex;
+    const playlistItem = this.props.reducer.playlistStore.playlist[curIndex];
 
-    //console.log(this.props);
-
-    this.props.setIndexPlaylist(this.props.item.id);
-    this.props.playerStatusPlaylist(playerState.Play);
+    if(playlistItem.id != this.props.item.id) {
+      this.props.setIndexPlaylist(this.props.item.id, null, true);
+    }
+    else {
+      if(this.props.reducer.playlistStore.playerStatus == playerState.Play) {
+        this.props.playerStatusPlaylist(playerState.Paused);
+      }
+      else {
+        this.props.playerStatusPlaylist(playerState.Play);
+      }
+    }
   }
 
   _onRemoveFromPlaylist = () => {

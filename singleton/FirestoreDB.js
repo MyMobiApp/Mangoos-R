@@ -99,6 +99,8 @@ export default class FirebaseDBService {
                 console.error("Error writing document: ", error);
             });
           }
+        }).catch(error => {
+          console.error(error);
         });
       }
     
@@ -120,6 +122,8 @@ export default class FirebaseDBService {
               else {
                 reject();
               }
+            }).catch(error => {
+              reject(error);
             });
         });
       }
@@ -250,7 +254,7 @@ export default class FirebaseDBService {
       static getMusicMetadata(path) {
         
         return new Promise((resolve, reject) => { 
-          firebase.firestore().doc(path).onSnapshot(docSnapshot => {
+          firebase.firestore().doc(path).get().then(docSnapshot => {
               //console.log(docSnapshot);
               if (docSnapshot)
               {
@@ -260,12 +264,14 @@ export default class FirebaseDBService {
                 reject("You haven't uploaded any music file yet!");
               }
             });
+        }).catch(error => {
+          reject(error);
         });
       }
     
       static getPublicFeedItem() {
         return new Promise((resolve, reject) => { 
-            firebase.firestore().collection('publicFeed').onSnapshot(querySnapshot => {
+            firebase.firestore().collection('publicFeed').get().then(querySnapshot => {
                 let list = Array();
 
                 querySnapshot.forEach(docSnapshot => {
@@ -273,7 +279,7 @@ export default class FirebaseDBService {
                 });
 
                 resolve(list);
-            }, error => {
+            }).catch(error => {
                 reject(error);
             });
         });
@@ -305,7 +311,7 @@ export default class FirebaseDBService {
                 //console.log(list);
                 resolve(list);
             }).catch(error => {
-                reject(error);
+              reject(error);
             });
         });
       }
@@ -345,6 +351,8 @@ export default class FirebaseDBService {
               else {
                 reject("Can't find music data with fullPath : " + fullPath);
               }
+            }).catch(error => {
+              reject(error);
             });
         });
       }
@@ -368,6 +376,8 @@ export default class FirebaseDBService {
               else {
                 reject("Can't find user profile with handle : " + handle);
               }
+            }).catch(error => {
+              reject(error);
             });
         });
       }
@@ -409,7 +419,7 @@ export default class FirebaseDBService {
                   });
               }
             }
-          }, error => {
+          }).catch(error => {
             console.log("Error getting mp3Collection for editMusicMetadata : " + error);
     
             reject(error);
@@ -423,12 +433,26 @@ export default class FirebaseDBService {
           firebase.firestore().doc(doc_path).get().then(res => {
             console.log(res);
             const file_path = res.data().fullPath;
+            let img_path    = null;
+            if(res.data().metaData.hasOwnProperty('common') && 
+              res.data().metaData.common.hasOwnProperty('picture') && 
+              res.data().metaData.common.picture[0].hasOwnProperty('data')) {
+              img_path = res.data().metaData.common.picture[0].data;
+            }
 
             FirebaseStorage.deleteFile(file_path).then(() => {
-              console.log("File deleted from storage ");
+              console.log("Music file deleted from storage ");
             }, error => {
-              console.log("Error deleting file from storage : " + error);
+              console.log("Error deleting music file from storage : " + error);
             });
+
+            if(img_path) {
+              FirebaseStorage.deleteFile(img_path).then(() => {
+                console.log("Cover image file deleted from storage ");
+              }, error => {
+                console.log("Error deleting cover image file from storage : " + error);
+              });
+            }
     
             if(res.exists) {
               if(res.data().feedID) {
@@ -436,7 +460,7 @@ export default class FirebaseDBService {
                   res.ref.delete().then(() => {
                     resolve();
                   }).catch(error => {
-                    console.log("Error deleting file from storage : " + error);
+                    console.log("Error deleting entry from mp3Collection : " + error);
     
                     reject(error);
                   });
@@ -450,7 +474,7 @@ export default class FirebaseDBService {
                 res.ref.delete().then(() => {
                   resolve();
                 }).catch(error => {
-                  console.log("Error deleting file from storage : " + error);
+                  console.log("Error deleting entry from mp3Collection : " + error);
     
                   reject(error);
                 });
@@ -459,7 +483,7 @@ export default class FirebaseDBService {
             else {
               resolve();
             }
-          }, error => {
+          }).catch(error => {
             console.log("Error getting mp3Collection for deleteMusicMetadataAndFile : " + error);
     
             reject(error);
@@ -499,7 +523,7 @@ export default class FirebaseDBService {
                 }
                 resolve(list);
             }).catch(error => {
-                reject(error);
+              reject(error);
             });
         });
       }
