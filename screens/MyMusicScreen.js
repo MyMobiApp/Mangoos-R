@@ -21,7 +21,7 @@ import AppHeader, { TabID } from '../components/AppHeader';
 import FirebaseDBService from '../singleton/FirestoreDB';
 import DataService from '../singleton/Data';
 import { PlaylistItem } from '../components/MusicPlayer';
-import MyMusicItem from '../components/MyMusicItem';
+import { MyMusicItem } from '../components/MyMusicItem';
 import NativeStorage from '../singleton/NativeStorage';
 
 class MyMusicScreen extends React.Component {

@@ -64,7 +64,7 @@ class PlaylistScreen extends React.Component {
 		//alert(newProps.reducer.netInfoStore.bInternetActive + " - " + this.props.reducer.playlistStore.playerStatus );
 		//alert(JSON.stringify(newProps.reducer.playlistStore));
 		if(this.props.reducer.playlistStore.playlist != newProps.reducer.playlistStore.playlist.length){
-			NativeStorage.persistPlaylist(newProps.reducer.playlistStore.playlist);
+			this._persistList();
 		}
 
     if(!newProps.reducer.netInfoStore.bInternetActive && (this.props.reducer.playlistStore.playerStatus == playerState.Play)) {
