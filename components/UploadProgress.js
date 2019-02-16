@@ -27,7 +27,7 @@ export class UploadProgress extends React.Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.state.progress !== nextProps.progress || this.state.fileName !== nextProps.fileName;
+    return (this.state.progress !== nextProps.progress) || (this.state.fileName !== nextProps.fileName);
   }
 
   _renderUploadFileName = (maxLength) => {
@@ -60,7 +60,7 @@ export class UploadProgress extends React.Component {
                 <View style={styles.progressBadge}>
                   <Badge success>
                     <Text style={styles.progressText}>
-                      {this.state.progress * 100}%
+                      {(this.state.progress * 100).toFixed(0)}%
                     </Text>
                   </Badge>
                 </View>

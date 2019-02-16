@@ -28,6 +28,18 @@
     "android": {
       "package": "com.mgoos.app"
     },
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "mastishka-intellisys-private-l",
+            "project": "mgoos",
+            "authToken": "5e75c3e23569408288aa3de29743a28e94b1bec078fe4c358df0101316228dd2"
+          }
+        }
+      ]
+    },
     "androidStatusBarColor": "#334393",
     "androidStatusBar": {
       "barStyle": "light-content",

@@ -64,7 +64,7 @@ class PlaylistScreen extends React.Component {
 		//alert(newProps.reducer.netInfoStore.bInternetActive + " - " + this.props.reducer.playlistStore.playerStatus );
 		//alert(JSON.stringify(newProps.reducer.playlistStore));
 		if(this.props.reducer.playlistStore.playlist != newProps.reducer.playlistStore.playlist.length){
-			this._persistList();
+			NativeStorage.persistPlaylist(this.props.reducer.playlistStore.playlist);
 		}
 
     if(!newProps.reducer.netInfoStore.bInternetActive && (this.props.reducer.playlistStore.playerStatus == playerState.Play)) {
@@ -142,8 +142,8 @@ class PlaylistScreen extends React.Component {
 		);
 	}
 
-	_onTogglePlaylistPlayButtonVisibility = () => {
-		this.setState({bDisablePlay: !this.state.bDisablePlay});
+	_onTogglePlaylistPlayButtonVisibility = (bDisable) => {
+		this.setState({bDisablePlay: bDisable});
 	}
 
 	_onMusicPlayerLayout = (layout) => {

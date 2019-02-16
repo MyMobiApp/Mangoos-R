@@ -90,7 +90,7 @@ export default class LoginScreen extends React.Component {
 
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Spinner />
+        <Spinner color='gray'/>
       </View>
     );
   };

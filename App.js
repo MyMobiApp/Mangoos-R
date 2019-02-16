@@ -8,6 +8,13 @@ import Login from './navigation/Login';
 import FirebaseDBService from './singleton/FirestoreDB';
 import './issues/setTimeoutIssue';
 
+import Sentry from 'sentry-expo';
+
+// Remove this once Sentry is correctly setup.
+//Sentry.enableInExpoDevelopment = true;
+
+// Init function calls
+Sentry.config('https://271a4453bd5f462385ba4aa866fb471f@sentry.io/1395405').install();
 const store = ApplicationStore.getStore();
 
 export default class App extends React.Component {
@@ -21,6 +28,15 @@ export default class App extends React.Component {
 
     FirebaseDBService.init();
   }
+
+  /*componentDidCatch(error, errorInfo) {
+    Sentry.withScope(scope => {
+      Object.keys(errorInfo).forEach(key => {
+        scope.setExtra(key, errorInfo[key]);
+      });
+      Sentry.captureException(error);
+    });
+  }*/
 
   render() {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {

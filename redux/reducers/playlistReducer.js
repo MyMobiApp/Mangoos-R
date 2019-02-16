@@ -9,14 +9,23 @@ export const PlaylistReducer = (state = initialState, action) => {
         case playlistActions.AddOne: {
             const playlistItem = action.payload;
 
-            return Object.assign({}, state, {playlist: [...state.playlist, playlistItem]});
+            const index = state.playlist.findIndex(o => o.id === playlistItem.id);
+
+            if(index < 0) {
+                return Object.assign({}, state, {playlist: [...state.playlist, playlistItem]});
+            }
+            else {
+                return state;
+            }
         }
         case playlistActions.AddMany: {
             const playlistItems = action.payload;
-            
+
+            const fileredPlaylistItems = playlistItems.filter(o => state.playlist.findIndex(obj => obj.id === o.id) < 0);
+
             return Object.assign({}, state, {
                 playerStatus: playerState.None, 
-                playlist: state.playlist.concat(playlistItems)});
+                playlist: state.playlist.concat(fileredPlaylistItems)});
         }
         case playlistActions.Change: {
             const playlistItems = action.payload.items;

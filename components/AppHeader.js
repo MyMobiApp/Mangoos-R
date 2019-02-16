@@ -120,13 +120,13 @@ class AppHeader extends React.Component {
 
   _onAddToPlaylistPress = () => {
     //console.log("AppHeader Props: ", this.props);
+
+    this.props.clearSelectionCallback();
     
     this.props.addManyToPlaylist(this.props.selected);
 
     ToastAndroid.showWithGravity(`${this.props.selected.length} items added to playlist!`, 
       ToastAndroid.SHORT, ToastAndroid.CENTER);
-
-    this.props.clearSelectionCallback();
   }
 
   _onMorePress = () => {

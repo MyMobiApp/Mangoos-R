@@ -43,7 +43,7 @@ class MyMusicScreen extends React.Component {
       endReached: false,
       bShowSpinner: true,
       uploadProgress: 0,
-      uploadFileName: "pallo latke.mp3",
+      uploadFileName: "",
       downloadURL: "",
       musicList: Array(),
       bFetching: true,
@@ -68,7 +68,9 @@ class MyMusicScreen extends React.Component {
 
   componentDidMount() {
     // Fetch playlist items from native storage
-    this._readMusicListFromStorage();
+    //this._readMusicListFromStorage();
+    this.bListLoadedFromLocal = false;
+    this._loadMyMusic();
   }
 
   _renderItem = (item) => {
@@ -235,13 +237,24 @@ class MyMusicScreen extends React.Component {
   _onRemoveItemFromMusicList = (id) => {
     this.props.removeFromPlaylist(id);
     
-    const newList = this.state.musicList.map(o => o.id !== id);
-
-    this.setState({musicList: newList});
+    const newList = this.state.musicList.filter(o => o.id !== id);
+    //console.log(newList);
+    
+    this.setState({musicList: Array().concat(newList)});
   }
 
   _clearSelection = () => {
-    this.setState({selected: new Map()});
+    
+    this.setState((state) => {
+      // copy the map rather than modifying state.
+      const selected = new Map(state.selected);
+      selected.clear();
+      console.log("_clearSelection:", selected);
+      const selectedItemAry = Array();
+      const nSelectCount = 0;
+
+      return {selected, selectedItemAry, nSelectCount};
+    });
   }
 
   _onThumbnailPress = (id) => {
@@ -250,7 +263,7 @@ class MyMusicScreen extends React.Component {
     this.setState((state) => {
       // copy the map rather than modifying state.
       const selected = new Map(state.selected);
-      const val = !selected.get(id);
+      const val = !!!selected.get(id);
       selected.set(id, val); // toggle: val is boolean (true, false)
 
       const selectedItem = state.musicList.find(o => o.id === id);

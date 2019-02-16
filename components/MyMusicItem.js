@@ -35,6 +35,13 @@ export class MyMusicItem extends React.Component {
     this.props.onItemPress(id);
   }
 
+  componentWillReceiveProps(newProps) {
+    //console.log("Selected: " + newProps.selected );
+    if(!newProps.selected) {
+      this.setState({bSelected: false});
+    }
+  }
+
   _renderMusicInfo = () => {
       if(this.state.bUpdatingAlbumTitle) {
         return (
@@ -157,15 +164,17 @@ export class MyMusicItem extends React.Component {
               {
                 text: 'Yes', 
                 onPress: () => {
-                    FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
-                        .then(() => {
-                          ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
-                            ToastAndroid.SHORT, ToastAndroid.CENTER);
+                  this.setState({bUpdatingAlbumTitle: true});
+                  FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
+                    .then(() => {
+                      ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
+                        ToastAndroid.SHORT, ToastAndroid.CENTER);
 
-                          this.props.onRemoveItem(this.props.item.id);
-                        }).catch(error => {
-                            ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
-                        });
+                      this.props.onRemoveItem(this.props.item.id);
+                    }).catch(error => {
+                        ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
+                        this.setState({bUpdatingAlbumTitle: false});
+                    });
                 }
               },
             ],

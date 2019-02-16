@@ -150,7 +150,7 @@ async _loadNewPlaybackInstance(playing, newProps = null) {
     
     props = newProps ? newProps : this.props;
     // Disable playlist play buttons
-    this.props.onChangingTrack();
+    this.props.onChangingTrack(true);
     
     if (this.playbackInstance != null) {
         await this.playbackInstance.unloadAsync();
@@ -182,7 +182,7 @@ async _loadNewPlaybackInstance(playing, newProps = null) {
     }
 
     // Enable playlist play buttons
-    this.props.onChangingTrack();
+    this.props.onChangingTrack(false);
 }
 
 _updateScreenForLoading(isLoading, instanceName = null) {
