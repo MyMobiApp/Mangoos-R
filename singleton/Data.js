@@ -46,14 +46,14 @@ export default class DataService {
   static saveProfileData(pd) {
     this.profileData = Object.assign({}, pd);
     
-    console.log("Set ProfileData: " + JSON.stringify(this.profileData));
+    console.log("Save ProfileData: " + JSON.stringify(this.profileData));
     FirebaseDBService.registerUser(pd);
   }
 
   static setProfileData(pd) {
     this.profileData = Object.assign({}, pd);
     
-    console.log("Saved ProfileData: " + JSON.stringify(this.profileData));
+    console.log("Set ProfileData: " + JSON.stringify(this.profileData));
   }
 
   static updateProfileData(pd) {

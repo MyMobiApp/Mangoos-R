@@ -189,11 +189,12 @@ class MyMusicScreen extends React.Component {
         });
       }
       else {
-        this.setState({endReached: true});
+        this.setState({endReached: true, refreshing: false, bShowSpinner: false});
       }
     }).catch(error => {
       console.log("Error getMusicFileList");
       console.log(error);
+      this.setState({endReached: true, refreshing: false, bShowSpinner: false});
     });
     //return ();
   }

@@ -110,12 +110,12 @@ class PlaylistSortableItem extends React.Component {
           <View style={{flexDirection: "row"}}>
             <Button transparent onPress={this._onPlayFromPlaylist} 
               style={{alignSelf:'center'}}
-              disabled={!this.props.bDisablePlay} >
+              disabled={this.props.bDisablePlay} >
               {this._renderPlayPauseButton(bCurrent, eStatus)}
             </Button>
             <Button transparent onPress={this._onRemoveFromPlaylist} 
               style={{alignSelf:'center'}}
-              disabled={!this.props.bDisablePlay} >
+              disabled={this.props.bDisablePlay} >
               <Icon name='md-close-circle-outline' />
             </Button>
           </View>

@@ -179,7 +179,7 @@ export default class LoginScreen extends React.Component {
       
     });*/
 
-    DataService.setProfileData(userData);
+    DataService.saveProfileData(userData);
     console.log('Logged into Facebook!', userData);
     this.setState({ loggedIn: true, authenticationFB: false, authenticatingFirebase: false, userInfo: userData });
   };
