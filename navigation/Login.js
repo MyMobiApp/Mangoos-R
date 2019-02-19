@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, View, Text, Platform } from 'react-native';
 import { Button, Spinner, Icon } from 'native-base';
-import { AuthSession, Facebook } from 'expo';
+import { AuthSession, Facebook, Google } from 'expo';
 import AppNavigator from './AppNavigator';
 
 import DataService from '../singleton/Data';
@@ -14,6 +14,12 @@ require('firebase/firestore');
 
 const FB_APP_ID = '2436819223026748';
 const GOOGLE_OAUTH_CLIENT_ID = '949519506589-kdnau097d9io12qncqt9ov85k9vrh97t.apps.googleusercontent.com';
+const GOOGLE_OAUTH_ANDROID_CLIENT_ID = '949519506589-gokc4p0cqqemp69i0pvb6bicnal1be4e.apps.googleusercontent.com';
+
+const loginMethod = {
+  Facebook: 'facebook',
+  Google: 'google'
+}
 
 export default class LoginScreen extends React.Component {
   static navigationOptions = {
@@ -27,11 +33,12 @@ export default class LoginScreen extends React.Component {
       loggedIn: false,
       authenticatingFirebase: true,
       userInfo: null,
-      authenticationFB: false
+      authenticationGFB: false
     }
   }
 
   render() {
+    //firebase.auth().signOut();
     if(this.state.loggedIn) {
       return (
         <View style={styles.container}>
@@ -44,10 +51,10 @@ export default class LoginScreen extends React.Component {
       if(this.state.authenticatingFirebase) {
         return this._authFromFirebase();
       }
-      else if(this.state.authenticationFB) {
+      else if(this.state.authenticationGFB) {
         return (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Spinner />
+            <Spinner color='gray'/>
           </View>
         );
       }
@@ -56,9 +63,13 @@ export default class LoginScreen extends React.Component {
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center'}}>
             <Image source={require('../assets/images/mgoos_logo_ori.gif')} 
               style={{width:162, height:50, marginBottom:50, top:-20}} />
-            <Button primary block onPress={this._handlePressAsync} style={{margin:10}}> 
+            <Button primary block onPress={this._handleFaceBookLoginAsync} style={{margin:10}}> 
               <Text style={{color:'white'}}>Login with Facebook</Text>
               <Icon name='logo-facebook'></Icon>
+            </Button>
+            <Button primary block onPress={this._handleGoogleLoginAsync} style={{margin:10}}> 
+              <Text style={{color:'white'}}>Login with Google</Text>
+              <Icon name='logo-google'></Icon>
             </Button>
           </View>
         );
@@ -73,10 +84,15 @@ export default class LoginScreen extends React.Component {
         console.log(user);
 
         FirebaseDBService.getUserProfile(user.email).then(data => {
-          data.picture_url = user.photoURL+'?height=200';
+          if(data.method === loginMethod.Facebook) {
+            data.picture_url = user.photoURL+'?height=200';
+          }
+          
           DataService.saveProfileData(data);
-
           this.setState({ loggedIn: true, authenticatingFirebase: false, userInfo: data });
+        }).catch(error => {
+          console.log("_authFromFirebase", error);
+          this.setState({ loggedIn: true, authenticatingFirebase: false, userInfo: null });
         });
         // User is signed in.
       }
@@ -90,7 +106,7 @@ export default class LoginScreen extends React.Component {
 
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Spinner color='gray'/>
+        <Spinner />
       </View>
     );
   };
@@ -108,8 +124,51 @@ export default class LoginScreen extends React.Component {
     );
   };
 
-  _handlePressAsync = async () => {
-    this.setState({authenticationFB: true});
+  _handleGoogleLoginAsync = async () => {
+    this.setState({authenticationGFB: true});
+
+    try {
+      const result = await Google.logInAsync({
+        //clientId: GOOGLE_OAUTH_CLIENT_ID,
+        androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID,
+        scopes: ["profile", "email"]
+      });
+      console.log(result);
+      if (result.type === "success") {
+        var userData = {
+          handle: result.user.email.split('@').join('.'),
+          email: result.user.email, 
+          first_name: result.user.familyName, 
+          last_name: result.user.givenName,
+          picture_url: result.user.photoUrl, 
+          full_name: result.user.name,
+          method: loginMethod.Google
+        };
+        const googleCredential = firebase.auth.GoogleAuthProvider
+        .credential(result.idToken, result.accessToken);
+    
+        try {
+          await firebase.auth().signInAndRetrieveDataWithCredential(googleCredential);
+        }
+        catch(error) {
+          console.log("Firebase failed google login: "); 
+          console.log(error)
+        }
+
+        await DataService.saveProfileData(userData);
+        console.log('Logged into Google!', userData);
+        this.setState({ loggedIn: true, authenticationGFB: false, authenticatingFirebase: false, userInfo: userData });
+
+      } else {
+        console.log("cancelled");
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  }
+
+  _handleFaceBookLoginAsync = async () => {
+    this.setState({authenticationGFB: true});
 
     let redirectUrl = AuthSession.getRedirectUrl();
     //alert(redirectUrl);
@@ -159,7 +218,8 @@ export default class LoginScreen extends React.Component {
       first_name: userInfo.first_name, 
       last_name: userInfo.last_name,
       picture_url: userInfo.picture.data.url, 
-      full_name: userInfo.name
+      full_name: userInfo.name,
+      method: loginMethod.Facebook
     };
     const facebookCredential = firebase.auth.FacebookAuthProvider
     .credential(accessToken);
@@ -168,7 +228,7 @@ export default class LoginScreen extends React.Component {
       await firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential);
     }
     catch(error) {
-      console.log("Firebase failed: "); 
+      console.log("Firebase failed facebook login: "); 
       console.log(error)
     }
     /*firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential)
@@ -181,7 +241,7 @@ export default class LoginScreen extends React.Component {
 
     DataService.saveProfileData(userData);
     console.log('Logged into Facebook!', userData);
-    this.setState({ loggedIn: true, authenticationFB: false, authenticatingFirebase: false, userInfo: userData });
+    this.setState({ loggedIn: true, authenticationGFB: false, authenticatingFirebase: false, userInfo: userData });
   };
 }
 

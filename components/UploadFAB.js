@@ -36,9 +36,7 @@ export class UploadFAB extends React.Component {
 
   onUpload() {
     //audio/mpeg,audio/apev2,audio/mp4,audio/asf,audio/flac,audio/ogg,audio/aiff,audio/wavpack,audio/riff,audio/musepack
-    DocumentPicker.getDocumentAsync([
-      {type: "audio/mpeg",      copyToCacheDirectory : false}
-    ]).then(obj => {
+    DocumentPicker.getDocumentAsync({type: "audio/mpeg"}).then(obj => {
       console.log(obj);
       if(obj.type == "success") {
         this.uploadAudioAsync(obj.uri, obj.name, "audio/mpeg");

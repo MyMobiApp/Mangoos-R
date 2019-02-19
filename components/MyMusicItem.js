@@ -5,7 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
 import showPopupMenu from 'react-native-popup-menu-android';
 
-import FirebaseDBService from '../singleton/FirestoreDB';
+import FirebaseDBService, { FeedItem } from '../singleton/FirestoreDB';
+import DataService from '../singleton/Data';
 
 
 export class MyMusicItem extends React.Component {
@@ -43,23 +44,27 @@ export class MyMusicItem extends React.Component {
   }
 
   _renderMusicInfo = () => {
-      if(this.state.bUpdatingAlbumTitle) {
-        return (
-            <Spinner color='red' />
-        );
-      }
-      else {
-        return (
-            <TouchableOpacity onPress={() => this._onItemPress(this.props.item.id)}>
-                <Text>{this.state.title}</Text>
-                <Text note>{this.state.album}</Text>
-                <Text style={{color:'blue', fontSize:10}}>{this.props.item.createdAt}</Text>
-            </TouchableOpacity>
-        );
-      }
+    var options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+    const dStr  = (new Date(this.props.item.createdAt)).toLocaleDateString("en-US", options);
+
+    if(this.state.bUpdatingAlbumTitle) {
+      return (
+          <Spinner color='red' />
+      );
+    }
+    else {
+      return (
+          <TouchableOpacity onPress={() => this._onItemPress(this.props.item.id)}>
+              <Text>{this.state.title}</Text>
+              <Text note>{this.state.album}</Text>
+              <Text style={{color:'blue', fontSize:10, fontWeight:'bold'}}>{dStr}{this.props.bInFeed?' - In public feed':''}</Text>
+          </TouchableOpacity>
+      );
+    }
   }
 
   render() {
+    //console.log("Rendering : ", this.props.item.id, this.props.item.title, this.props.bInFeed);
     return (
         <View>
             <Dialog.Container visible={this.state.bDialogVisible}>
@@ -137,10 +142,13 @@ export class MyMusicItem extends React.Component {
   }
 
   _onEditPress = () => {
+    const feedLabel = this.props.bInFeed ? 'Remove from Feed' : 'Post to Public Feed';
+
     showPopupMenu(
         [
             { id:'edit', label:'Quick Edit' },
-            { id:'delete', label:'Trash' }
+            { id:'delete', label:'Trash' },
+            { id:'feed', label:feedLabel }
         ],
         this.handleSettingsSelect,
         this.settingsButton
@@ -148,39 +156,80 @@ export class MyMusicItem extends React.Component {
   }
 
   handleSettingsSelect = (item) => {
-    if(item.id === 'edit') {
-        this.setState({bDialogVisible: true});
-    }
-    else if(item.id === 'delete') {
-        Alert.alert(
-            'Delete ...',
-            `Are you sure to delete '${this.props.item.title}'?`,
-            [
-              {
-                text: 'No',
-                onPress: () => console.log('Cancel Pressed'),
-                style: 'cancel',
-              },
-              {
-                text: 'Yes', 
-                onPress: () => {
-                  this.setState({bUpdatingAlbumTitle: true});
-                  FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
-                    .then(() => {
-                      ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
-                        ToastAndroid.SHORT, ToastAndroid.CENTER);
 
-                      this.props.onRemoveItem(this.props.item.id);
-                    }).catch(error => {
-                        ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
-                        this.setState({bUpdatingAlbumTitle: false});
-                    });
-                }
-              },
-            ],
-            {cancelable: false},
-          );
+    switch(item.id) {
+      case 'edit': {
+        this.setState({bDialogVisible: true});
+
+        break;
+      }
+      case 'delete': {
+        Alert.alert(
+          'Delete ...',
+          `Are you sure to delete '${this.props.item.title}'?`,
+          [
+            {
+              text: 'No',
+              onPress: () => console.log('Cancel Pressed'),
+              style: 'cancel',
+            },
+            {
+              text: 'Yes', 
+              onPress: () => {
+                this.setState({bUpdatingAlbumTitle: true});
+                FirebaseDBService.deleteMusicMetadataAndFile(this.props.item.dbPath)
+                  .then(() => {
+                    ToastAndroid.showWithGravity(`${this.props.item.title} removed successfully!`, 
+                      ToastAndroid.SHORT, ToastAndroid.CENTER);
+
+                    this.props.onRemoveItem(this.props.item.id);
+                  }).catch(error => {
+                      ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
+                      this.setState({bUpdatingAlbumTitle: false});
+                  });
+              }
+            },
+          ],
+          {cancelable: false},
+        );
+
+        break;
+      }
+      case 'feed': {
+        const handle        = DataService.getProfileData().handle;
+        const fullName      = DataService.getProfileData().full_name;
+        const postDateTime  = (new Date()).toISOString();
+        const postDateObj   = Date.now();
+        const dbPath        = this.props.item.dbPath;
+        const docID         = this.props.item.id;
+        const message       = "";
+
+        if(this.props.item.bInFeed) {
+          FirebaseDBService.deletePublicFeedItem(dbPath).then(() => {
+            ToastAndroid.showWithGravity("Item removed from feed.", ToastAndroid.SHORT, ToastAndroid.CENTER);
+              this.setState({bUpdatingAlbumTitle: false});
+          }).catch(error => {
+            console.log(error);
+            ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
+              this.setState({bUpdatingAlbumTitle: false});
+          });
+        }
+        else {
+          const feedItem = new FeedItem(handle, fullName, postDateTime, 
+            postDateObj, dbPath, docID, message, 0, 1, null, null);
+          FirebaseDBService.saveItemToPublicFeed(feedItem.toJSON()).then(() => {
+            ToastAndroid.showWithGravity("Item added to Feed!", ToastAndroid.SHORT, ToastAndroid.CENTER);
+              this.setState({bUpdatingAlbumTitle: false});
+          }).catch(error => {
+            ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
+              this.setState({bUpdatingAlbumTitle: false});
+          });
+        }
+
+        break;
+      }
     }
+    
     //alert('Pressed: ' + item.label);
   }
 }

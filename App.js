@@ -9,6 +9,8 @@ import FirebaseDBService from './singleton/FirestoreDB';
 import './issues/setTimeoutIssue';
 
 import Sentry from 'sentry-expo';
+import SentryExpo from 'sentry-expo';
+import DataService from './singleton/Data';
 
 // Remove this once Sentry is correctly setup.
 //Sentry.enableInExpoDevelopment = true;
@@ -29,14 +31,14 @@ export default class App extends React.Component {
     FirebaseDBService.init();
   }
 
-  /*componentDidCatch(error, errorInfo) {
-    Sentry.withScope(scope => {
-      Object.keys(errorInfo).forEach(key => {
-        scope.setExtra(key, errorInfo[key]);
-      });
-      Sentry.captureException(error);
-    });
-  }*/
+  componentDidCatch(error, errorInfo) {
+    const uid   = DataService.getProfileData().handle;
+    const email = DataService.getProfileData().email;
+
+    Sentry.setUserContext({id: uid, username: email});
+    Sentry.setExtraContext(errorInfo);
+    Sentry.captureException(error);
+  }
 
   render() {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {

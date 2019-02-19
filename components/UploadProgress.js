@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, ProgressBarAndroid } from 'react-native';
-import { Col, Row, Grid } from 'react-native-easy-grid';
+import { ToastAndroid, StyleSheet, ProgressBarAndroid } from 'react-native';
 import { Textarea, View, Card, CardItem, Text, Body, Button, Icon, Badge, Left, Right } from 'native-base';
 import FirebaseDBService from '../singleton/FirestoreDB';
+import DataService from '../singleton/Data';
 
 export class UploadProgress extends React.Component {
 
@@ -94,7 +94,13 @@ export class UploadProgress extends React.Component {
   }
 
   _handlePostFeed = (event) => {
-    //FirebaseDBService.saveItemToPublicFeed();
+    const feedItem = DataService.getPublicFeedItem();
+    FirebaseDBService.saveItemToPublicFeed(feedItem).then(docRef => {
+      ToastAndroid.showWithGravity(`Item posted to the public feed.`, 
+        ToastAndroid.SHORT, ToastAndroid.CENTER);
+    });
+    DataService.setPublicFeedItem(null);
+    this.props.onPostFeed();
   }
   
 }

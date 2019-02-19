@@ -50,6 +50,7 @@ class MyMusicScreen extends React.Component {
       nSelectCount: 0,
       selected: new Map(),
       selectedItemAry: Array(),
+      feedMap: new Map(),
       refreshing: false
     };
   }
@@ -74,12 +75,15 @@ class MyMusicScreen extends React.Component {
   }
 
   _renderItem = (item) => {
+    //console.log("Rendering: ", !!this.state.feedMap.get(item.id), item);
+
     return (
       <MyMusicItem 
         item={item}
         onItemPress={this._onThumbnailPress}
         onAddToPlaylist={this._onAddToPlaylist}
         onRemoveItem={this._onRemoveItemFromMusicList}
+        bInFeed={this.state.feedMap.get(item.id)}
         selected={!!this.state.selected.get(item.id)} />
     );
   }
@@ -153,6 +157,7 @@ class MyMusicScreen extends React.Component {
         const listLength = list.length;
         this.fetchOffset = list[listLength - 1].data.createdAt;
         
+        let tempMap = new Map();
         list.forEach((item, index, ary) => {
           const id    = item.id;
           const title = (item.data.hasOwnProperty('metaData') && 
@@ -177,6 +182,14 @@ class MyMusicScreen extends React.Component {
           let plObj = new PlaylistItem(id, title, album, uri, coverImage, duration, createdAt, `mp3Collection/${handle}/default/${id}`);
 
           musicList.push(plObj.toJSON());
+
+          // Check for feedID
+          if(item.data.feedID) {
+            this.state.feedMap.set(id, true);
+          }
+          else {
+            this.state.feedMap.set(id, false);
+          }
           
           if(index == (listLength - 1)) {
             const finalList = this.state.musicList.concat(musicList);
@@ -185,6 +198,8 @@ class MyMusicScreen extends React.Component {
               bLoaded: true, musicList: finalList}, () => {
               NativeStorage.persistMyMusic(this.state.musicList);
             });
+
+            //console.log("FeedMap: ", this.state.feedMap);
           }
         });
       }

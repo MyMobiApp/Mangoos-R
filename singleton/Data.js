@@ -43,11 +43,11 @@ export default class DataService {
     return this.profileData;
   }
 
-  static saveProfileData(pd) {
+  static async saveProfileData(pd) {
     this.profileData = Object.assign({}, pd);
     
     console.log("Save ProfileData: " + JSON.stringify(this.profileData));
-    FirebaseDBService.registerUser(pd);
+    await FirebaseDBService.registerUser(pd);
   }
 
   static setProfileData(pd) {
@@ -64,5 +64,14 @@ export default class DataService {
     const bucket = 'mgoos-mvp.appspot.com';
 
     return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(storagePath)}?alt=media`;
+  }
+
+  static getFirebaseStorageURL(encodedURL) {
+    /*const URLComponents = encodedURL.split('/');
+    const lastComponent = URLComponents.pop();
+    const queryPath     = lastComponent.split('?');*/
+    const queryPath = encodedURL.split('/').pop().split('?');
+    
+    return decodeURIComponent(queryPath.shift());
   }
 }
