@@ -64,7 +64,7 @@ export class MyMusicItem extends React.Component {
   }
 
   render() {
-    //console.log("Rendering : ", this.props.item.id, this.props.item.title, this.props.bInFeed);
+    console.log("Rendering : ", this.props.item.id, this.props.item.title, this.props.bInFeed);
     return (
         <View>
             <Dialog.Container visible={this.state.bDialogVisible}>
@@ -204,7 +204,7 @@ export class MyMusicItem extends React.Component {
         const docID         = this.props.item.id;
         const message       = "";
 
-        if(this.props.item.bInFeed) {
+        if(this.props.bInFeed) {
           FirebaseDBService.deletePublicFeedItem(dbPath).then(() => {
             ToastAndroid.showWithGravity("Item removed from feed.", ToastAndroid.SHORT, ToastAndroid.CENTER);
               this.setState({bUpdatingAlbumTitle: false});

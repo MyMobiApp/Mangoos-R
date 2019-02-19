@@ -308,6 +308,7 @@ export default class FirebaseDBService {
   }
 
   static deletePublicFeedItem(mp3CollectionPath) {
+    console.log(mp3CollectionPath);
     return new Promise((resolve, reject) => { 
       firebase.firestore().doc(mp3CollectionPath).get().then(docSnapshot => {
         if (docSnapshot)
@@ -315,7 +316,11 @@ export default class FirebaseDBService {
           const feedID = docSnapshot.data().feedID;
 
           firebase.firestore().collection('publicFeed').doc(feedID).delete().then(() => {
-            resolve();
+            docSnapshot.ref.update({feedID:""}).then(() => {
+              resolve();
+            }).catch(error => {
+              reject(error);
+            });
           }).catch(error => {
             reject(error);
           })
