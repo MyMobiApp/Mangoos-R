@@ -23,6 +23,11 @@ export const netStateActions = {
     Disconnected: 'Disconnected'
 }
 
+export const updateScreenActions = {
+    UpdateFeed: 'UpdateFeed',
+    UpdateMyMusic: 'UpdateMyMusic',
+    updateFeedAndMyMusic: 'updateFeedAndMyMusic'
+}
 
 export const addToPlaylist = (item) => (
     {
@@ -98,5 +103,26 @@ export const netDisconnected = () => (
     {
         type: netStateActions.Disconnected,
         payload: false
+    }
+);
+
+export const updateFeed = (bUpdate) => (
+    {
+        type: updateScreenActions.UpdateFeed,
+        payload: bUpdate
+    }
+);
+
+export const updateMyMusic = (bUpdate) => (
+    {
+        type: updateScreenActions.UpdateMyMusic,
+        payload: bUpdate
+    }
+);
+
+export const updateFeedAndMyMusic = (bUpdate) => (
+    {
+        type: updateScreenActions.UpdateFeedAndMyMusic,
+        payload: bUpdate
     }
 );

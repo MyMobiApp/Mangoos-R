@@ -21,6 +21,7 @@ export class MyMusicItem extends React.Component {
     this.titleName = props.item.title;
 
     this.state = {
+        bInFeed: this.props.bInFeed,
         bSelected: false,
         bDialogVisible: false,
         bUpdatingAlbumTitle: false,
@@ -57,14 +58,14 @@ export class MyMusicItem extends React.Component {
           <TouchableOpacity onPress={() => this._onItemPress(this.props.item.id)}>
               <Text>{this.state.title}</Text>
               <Text note>{this.state.album}</Text>
-              <Text style={{color:'blue', fontSize:10, fontWeight:'bold'}}>{dStr}{this.props.bInFeed?' - In public feed':''}</Text>
+              <Text style={{color:'blue', fontSize:10, fontWeight:'bold'}}>{dStr}{this.state.bInFeed?' - In public feed':''}</Text>
           </TouchableOpacity>
       );
     }
   }
 
   render() {
-    console.log("Rendering : ", this.props.item.id, this.props.item.title, this.props.bInFeed);
+    //console.log("Rendering : ", this.props.item.id, this.props.item.title, this.state.bInFeed);
     return (
         <View>
             <Dialog.Container visible={this.state.bDialogVisible}>
@@ -142,7 +143,7 @@ export class MyMusicItem extends React.Component {
   }
 
   _onEditPress = () => {
-    const feedLabel = this.props.bInFeed ? 'Remove from Feed' : 'Post to Public Feed';
+    const feedLabel = this.state.bInFeed ? 'Remove from Feed' : 'Post to Public Feed';
 
     showPopupMenu(
         [
@@ -204,10 +205,14 @@ export class MyMusicItem extends React.Component {
         const docID         = this.props.item.id;
         const message       = "";
 
-        if(this.props.bInFeed) {
+        this.setState({bUpdatingAlbumTitle: true});
+        if(this.state.bInFeed) {
           FirebaseDBService.deletePublicFeedItem(dbPath).then(() => {
             ToastAndroid.showWithGravity("Item removed from feed.", ToastAndroid.SHORT, ToastAndroid.CENTER);
-              this.setState({bUpdatingAlbumTitle: false});
+            
+            this.setState({bUpdatingAlbumTitle: false, bInFeed: false});
+
+            this.props.onUpdateFeedAndMyMusic();
           }).catch(error => {
             console.log(error);
             ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
@@ -219,7 +224,9 @@ export class MyMusicItem extends React.Component {
             postDateObj, dbPath, docID, message, 0, 1, null, null);
           FirebaseDBService.saveItemToPublicFeed(feedItem.toJSON()).then(() => {
             ToastAndroid.showWithGravity("Item added to Feed!", ToastAndroid.SHORT, ToastAndroid.CENTER);
-              this.setState({bUpdatingAlbumTitle: false});
+              this.setState({bUpdatingAlbumTitle: false, bInFeed: true});
+
+            this.props.onUpdateFeedAndMyMusic();
           }).catch(error => {
             ToastAndroid.showWithGravity(error, ToastAndroid.SHORT, ToastAndroid.CENTER);
               this.setState({bUpdatingAlbumTitle: false});

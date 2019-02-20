@@ -10,7 +10,8 @@ import { Container, ListItem, View, Text, Body, Spinner } from 'native-base';
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { 
+import {
+    updateFeed ,
     addToPlaylist,
     removeFromPlaylist
 } from '../redux/actions';
@@ -83,6 +84,7 @@ class MyMusicScreen extends React.Component {
         onItemPress={this._onThumbnailPress}
         onAddToPlaylist={this._onAddToPlaylist}
         onRemoveItem={this._onRemoveItemFromMusicList}
+        onUpdateFeedAndMyMusic={this._onUpdateFeedAndMyMusic}
         bInFeed={this.state.feedMap.get(item.id)}
         selected={!!this.state.selected.get(item.id)} />
     );
@@ -259,6 +261,10 @@ class MyMusicScreen extends React.Component {
     this.setState({musicList: Array().concat(newList)});
   }
 
+  _onUpdateFeedAndMyMusic = () => {
+    this.props.updateFeed(true);
+  }
+
   _clearSelection = () => {
     
     this.setState((state) => {
@@ -334,6 +340,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = dispatch => (
   bindActionCreators({
+    updateFeed,
     addToPlaylist,
     removeFromPlaylist
   }, dispatch)

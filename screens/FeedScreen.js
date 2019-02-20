@@ -16,6 +16,7 @@ import { Spinner } from 'native-base';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { 
+    updateFeed,
     addToPlaylist,
     netConnected,
     netDisconnected
@@ -60,6 +61,15 @@ class FeedScreen extends React.Component {
     NetInfo.addEventListener('connectionChange', this._handleConnectivityChange);
 
     this._loadFeed();
+  }
+
+  shouldComponentUpdate(newProps) {
+    if(newProps.reducer.updateScreenStore.bUpdateFeed) {
+      //this._onListRefresh();
+      this.props.updateFeed(false);
+    }
+
+    return true;
   }
 
   _handleConnectivityChange = (connectionInfo) => {
@@ -205,12 +215,18 @@ class FeedScreen extends React.Component {
   }
 
   _onListRefresh = () => {
-    this.timerHandle  = null;
-    this.fetchOffset  = null;
+    if(this.timerHandle) {
+      clearInterval(this.timerHandle);
 
-    this.setState({feedList: Array(), refreshing: true, endReached: false}, () => {
-      this._loadFeed(null);
-    });
+      this.timerHandle  = null;
+    }
+    else {
+      this.fetchOffset  = null;
+
+      this.setState({feedList: Array(), refreshing: true, endReached: false}, () => {
+        this._loadFeed(null);
+      });
+    }
   }
 
   _maybeRenderDevelopmentModeWarning() {
@@ -342,6 +358,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = dispatch => (
   bindActionCreators({
+    updateFeed,
     addToPlaylist,
     netConnected,
     netDisconnected

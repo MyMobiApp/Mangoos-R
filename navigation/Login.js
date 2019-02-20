@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, View, Text, Platform } from 'react-native';
+import { Image, StyleSheet, View, Text, Platform, ToastAndroid } from 'react-native';
 import { Button, Spinner, Icon } from 'native-base';
 import { AuthSession, Facebook, Google } from 'expo';
 import AppNavigator from './AppNavigator';
@@ -14,7 +14,8 @@ require('firebase/firestore');
 
 const FB_APP_ID = '2436819223026748';
 const GOOGLE_OAUTH_CLIENT_ID = '949519506589-kdnau097d9io12qncqt9ov85k9vrh97t.apps.googleusercontent.com';
-const GOOGLE_OAUTH_ANDROID_CLIENT_ID = '949519506589-gokc4p0cqqemp69i0pvb6bicnal1be4e.apps.googleusercontent.com';
+const GOOGLE_OAUTH_ANDROID_CLIENT_ID = '949519506589-48gqqimsbjutnklja0lonhpd2510p56v.apps.googleusercontent.com';
+const GOOGLE_OAUTH_EXPO_CLIENT_ID = '949519506589-gokc4p0cqqemp69i0pvb6bicnal1be4e.apps.googleusercontent.com';
 
 const loginMethod = {
   Facebook: 'facebook',
@@ -129,8 +130,8 @@ export default class LoginScreen extends React.Component {
 
     try {
       const result = await Google.logInAsync({
-        //clientId: GOOGLE_OAUTH_CLIENT_ID,
-        androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID,
+        androidClientId: GOOGLE_OAUTH_EXPO_CLIENT_ID,
+        //androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID,
         scopes: ["profile", "email"]
       });
       console.log(result);
@@ -211,37 +212,42 @@ export default class LoginScreen extends React.Component {
     );
     const userInfo = await userInfoResponse.json();
     console.log(userInfo);
+
+    if(userInfo.email) {
+      var userData = {
+        handle: userInfo.email.split('@').join('.'),
+        email: userInfo.email, 
+        first_name: userInfo.first_name, 
+        last_name: userInfo.last_name,
+        picture_url: userInfo.picture.data.url, 
+        full_name: userInfo.name,
+        method: loginMethod.Facebook
+      };
+      const facebookCredential = firebase.auth.FacebookAuthProvider
+      .credential(accessToken);
+  
+      try {
+        await firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential);
+      }
+      catch(error) {
+        console.log("Firebase failed facebook login: "); 
+        console.log(error)
+      }
+  
+      DataService.saveProfileData(userData);
+      console.log('Logged into Facebook!', userData);
+      this.setState({ loggedIn: true, authenticationGFB: false, authenticatingFirebase: false, userInfo: userData });
+    }
+    else {
+      this.setState({ authenticationGFB: false, authenticatingFirebase: false });
+
+      ToastAndroid.showWithGravity(
+        "Can't find email-id with facebook. Try logging-in with Google.",
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+    }
     
-    var userData = {
-      handle: userInfo.email.split('@').join('.'),
-      email: userInfo.email, 
-      first_name: userInfo.first_name, 
-      last_name: userInfo.last_name,
-      picture_url: userInfo.picture.data.url, 
-      full_name: userInfo.name,
-      method: loginMethod.Facebook
-    };
-    const facebookCredential = firebase.auth.FacebookAuthProvider
-    .credential(accessToken);
-
-    try {
-      await firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential);
-    }
-    catch(error) {
-      console.log("Firebase failed facebook login: "); 
-      console.log(error)
-    }
-    /*firebase.auth().signInAndRetrieveDataWithCredential(facebookCredential)
-    .then( success => { 
-      
-      console.log("Firebase success: " + JSON.stringify(success)); 
-    }).catch(error => {
-      
-    });*/
-
-    DataService.saveProfileData(userData);
-    console.log('Logged into Facebook!', userData);
-    this.setState({ loggedIn: true, authenticationGFB: false, authenticatingFirebase: false, userInfo: userData });
   };
 }
 

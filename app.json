@@ -8,7 +8,7 @@
       "ios",
       "android"
     ],
-    "version": "0.0.4",
+    "version": "0.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.mgoos.app",
-      "versionCode": 4,
+      "versionCode": 5,
       "googleServicesFile": "./google-services.json"
     },
     "hooks": {
