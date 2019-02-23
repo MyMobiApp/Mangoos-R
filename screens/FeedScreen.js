@@ -41,6 +41,8 @@ class FeedScreen extends React.Component {
     this.fetchOffset  = null;
     this.fetchLimit   = 5;
 
+    this.feedScreenItemLimit = 300;
+
     this.state = {
       feedList: Array(),
       bShowSpinner: true,
@@ -200,7 +202,7 @@ class FeedScreen extends React.Component {
 
   _onListEndReached = (distanceFromEnd) => {
     this.timerHandle = setInterval(() => {
-      if(this.state.bLoaded && !this.state.endReached) {
+      if(this.state.bLoaded && !this.state.endReached && (this.feedScreenItemLimit > this.state.feedList.length)) {
         this.setState({bLoaded: false});
         this._loadFeed(null);
 
